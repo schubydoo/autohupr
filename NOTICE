@@ -1,0 +1,16 @@
+autohupr
+Copyright 2026 Marcus Schubert
+
+This product is a fork of and derived from "autohupr-example"
+(https://github.com/balena-io-experimental/autohupr-example),
+Copyright Balena Ltd. and contributors, licensed under the
+Apache License, Version 2.0.
+
+Original contributors include (but are not limited to):
+  - Kyle Harding
+  - Pagan Gazzard
+  - Flynn Joffray
+  - jaomaloy
+  - Ken Bannister
+
+See the original repository's git history for the full list.
