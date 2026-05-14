@@ -1,6 +1,7 @@
 # autohupr
 
-Automatically keep your balenaOS host release up-to-date with this block!
+Automatically keep your balenaOS host release and balena supervisor up-to-date
+with this block!
 
 ## Usage
 
@@ -34,8 +35,13 @@ services:
 
 ### Environment Variables
 
-- `HUP_CHECK_INTERVAL`: Interval between checking for available updates. Default is 1d.
+- `HUP_CHECK_INTERVAL`: Interval between checking for available OS updates. Default is 1d.
 - `HUP_TARGET_VERSION`: The OS version you want balenaHUP to automatically update your
   device to. This is a required variable to be specified, otherwise, an update won't be
   performed by default. Set the variable to 'latest'/'recommended' for your device to
   always update to the latest OS version or set it to a specific version (e.g '2.107.10').
+- `SUPERVISOR_TARGET_VERSION`: The supervisor release to pin the device to. Leave empty
+  (default) to disable supervisor updates. Set to 'latest'/'recommended' to always pin to
+  the highest available supervisor release for the device's CPU architecture, or set it
+  to a specific version (e.g '14.13.7').
+- `SUPERVISOR_CHECK_INTERVAL`: Interval between checking for supervisor updates. Default is 1d.

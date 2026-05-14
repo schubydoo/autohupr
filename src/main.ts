@@ -1,5 +1,6 @@
-import type { OptionalNavigationResource } from 'balena-sdk';
 import { getSdk } from 'balena-sdk';
+// ms is pinned to 3.0.0-canary.1: StringValue type is only exported by 3.x,
+// and 3.x has no stable release yet.
 import type { StringValue } from 'ms';
 import ms from 'ms';
 
@@ -20,10 +21,16 @@ const deviceUuid =
 	(process.env.BALENA_DEVICE_UUID as unknown as string) ?? undefined;
 
 const checkInterval =
-	(process.env.HUP_CHECK_INTERVAL as unknown as StringValue) || '1d';
+	(process.env.HUP_CHECK_INTERVAL as unknown as StringValue) ?? '1d';
 
 const userTargetVersion =
-	(process.env.HUP_TARGET_VERSION as unknown as string) || '';
+	(process.env.HUP_TARGET_VERSION as unknown as string) ?? '';
+
+const supervisorTargetVersion =
+	(process.env.SUPERVISOR_TARGET_VERSION as unknown as string) ?? '';
+
+const supervisorCheckInterval =
+	(process.env.SUPERVISOR_CHECK_INTERVAL as unknown as StringValue) ?? '1d';
 
 if (!apiKey) {
 	console.error('BALENA_API_KEY required in environment');
@@ -46,19 +53,27 @@ const balena = getSdk({
 });
 
 const delay = (value: StringValue) => {
-	return new Promise((resolve) => setTimeout(resolve, ms(value)));
+	const millis = ms(value);
+	return new Promise<void>((resolve) => {
+		setTimeout(() => {
+			resolve();
+		}, millis);
+	});
 };
 
 const getExpandedProp = <T extends object, K extends keyof T>(
-	obj: OptionalNavigationResource<T>,
+	obj: T[] | null | undefined,
 	key: K,
-) => (Array.isArray(obj) && obj[0] && obj[0][key]) ?? undefined;
+): T[K] | undefined => (Array.isArray(obj) ? obj[0]?.[key] : undefined);
 
 const getDeviceType = async (uuid: string): Promise<string> => {
 	return await balena.models.device
 		.get(uuid, { $expand: { is_of__device_type: { $select: 'slug' } } })
 		.then((device) => {
-			return getExpandedProp(device.is_of__device_type, 'slug') as string;
+			return getExpandedProp(
+				device.is_of__device_type as Array<{ slug: string }>,
+				'slug',
+			)!;
 		});
 };
 
@@ -87,11 +102,46 @@ const getTargetVersion = async (
 					return (
 						osUpdateVersions.versions.find((version: string) =>
 							version.includes(userTargetVersion),
-						)! || null
+						) ?? null
 					);
 				}
 			}
 		});
+};
+
+const getCpuArchSlug = async (uuid: string): Promise<string> => {
+	const device = await balena.models.device.get(uuid, {
+		$expand: {
+			is_of__device_type: {
+				$select: 'slug',
+				$expand: { is_of__cpu_architecture: { $select: 'slug' } },
+			},
+		},
+	});
+	const arch = getExpandedProp(
+		device.is_of__device_type as Array<{
+			is_of__cpu_architecture: Array<{ slug: string }>;
+		}>,
+		'is_of__cpu_architecture',
+	);
+	return getExpandedProp(arch, 'slug')!;
+};
+
+const getTargetSupervisorVersion = async (
+	uuid: string,
+): Promise<string | null> => {
+	if (['recommended', 'latest'].includes(supervisorTargetVersion)) {
+		const arch = await getCpuArchSlug(uuid);
+		if (!arch) {
+			return null;
+		}
+		const releases =
+			await balena.models.os.getSupervisorReleasesForCpuArchitecture(arch, {
+				$select: ['raw_version'],
+			});
+		return (releases as Array<{ raw_version: string }>)[0]?.raw_version ?? null;
+	}
+	return supervisorTargetVersion;
 };
 
 /** Retrieve device model for status of HUP properties. */
@@ -102,13 +152,14 @@ const getUpdateStatus = async (uuid: string): Promise<HupStatus> => {
 		});
 		console.log(`Device HUP status: ${JSON.stringify(hupProps)}`);
 
-		if (hupProps.status.toLowerCase() === 'configuring') {
+		const status = hupProps.status?.toLowerCase();
+		if (status === 'configuring') {
 			if (hupProps.provisioning_state === 'OS update failed') {
 				return HupStatus.FAILED;
 			} else {
 				return HupStatus.RUNNING;
 			}
-		} else if (hupProps.status.toLowerCase() === 'idle') {
+		} else if (status === 'idle') {
 			return HupStatus.NOT_RUNNING;
 		} else {
 			return HupStatus.DEVICE_BUSY;
@@ -184,7 +235,47 @@ const main = async () => {
 	}
 };
 
+const supervisorLoop = async () => {
+	if (!supervisorTargetVersion) {
+		return;
+	}
+	while (true) {
+		try {
+			await balena.auth.loginWithToken(apiKey);
+
+			while (!(await balena.models.device.isOnline(deviceUuid))) {
+				console.log('Device is offline (supervisor loop)...');
+				await delay('2m');
+			}
+
+			const current = (
+				await balena.models.device.get(deviceUuid, {
+					$select: ['supervisor_version'],
+				})
+			).supervisor_version;
+			const target = await getTargetSupervisorVersion(deviceUuid);
+
+			if (target && target !== current) {
+				console.log(`Pinning supervisor: ${current} -> ${target}`);
+				await balena.models.device.pinToSupervisorRelease(deviceUuid, target);
+			} else {
+				console.log(
+					`Supervisor up to date at ${current} (target ${target ?? 'unknown'}).`,
+				);
+			}
+		} catch (e) {
+			console.error(`Supervisor loop error: ${e}`);
+		}
+
+		console.log(`Will check supervisor again in ${supervisorCheckInterval}...`);
+		await delay(supervisorCheckInterval);
+	}
+};
+
 console.log('Starting up...');
 main().catch((e) => {
+	console.error(e);
+});
+supervisorLoop().catch((e) => {
 	console.error(e);
 });
