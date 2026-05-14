@@ -12,8 +12,10 @@
   "packageRules": [
     {
       "description": "Group all balena-sdk-related deps",
-      "matchPackagePatterns": ["^balena-"],
-      "groupName": "balena packages"
+      "groupName": "balena packages",
+      "matchPackageNames": [
+        "/^balena-/"
+      ]
     },
     {
       "description": "Auto-merge devDependency patch updates",
@@ -31,7 +33,9 @@
     {
       "customType": "regex",
       "description": "Alpine packages annotated with `# renovate: alpine-package=<name>` in Dockerfile.template",
-      "fileMatch": ["(^|/)Dockerfile(\\.template)?$"],
+      "managerFilePatterns": [
+        "/(^|/)Dockerfile(\\.template)?$/"
+      ],
       "matchStrings": [
         "#\\s*renovate:\\s*alpine-package=(?<depName>[\\w-]+)\\s*\\n\\s*ARG\\s+\\w+_VERSION=(?<currentValue>[\\d.]+)"
       ],
