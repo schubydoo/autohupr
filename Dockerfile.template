@@ -1,0 +1,30 @@
+ARG ALPINE_VERSION=3.23
+FROM alpine:${ALPINE_VERSION}
+LABEL org.opencontainers.image.source="https://github.com/schubydoo/autohupr"
+LABEL org.opencontainers.image.description="Automatically keep balenaOS host releases up-to-date"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+
+# renovate: alpine-package=nodejs
+ARG NODEJS_VERSION=24
+
+# renovate: alpine-package=npm
+ARG NPM_VERSION=11
+
+RUN apk add --no-cache \
+      "nodejs=~${NODEJS_VERSION}" \
+      "npm=~${NPM_VERSION}" \
+      tini \
+      && addgroup -S app && adduser -S app -G app
+
+WORKDIR /usr/src/app
+
+COPY --chown=app:app package.json package-lock.json tsconfig.json ./
+COPY --chown=app:app src/ ./src/
+COPY --chown=app:app start.sh ./
+
+RUN npm ci && npm run build && npm prune --omit=dev \
+    && npm cache clean --force && rm -rf /tmp/* \
+    && chmod +x ./start.sh
+
+USER app
+ENTRYPOINT ["/sbin/tini", "--", "/usr/src/app/start.sh"]
