@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    # Skip the workflow's own release commits (avoid loops). Release commits
+    # have subject "vX.Y.Z".
+    if: "!startsWith(github.event.head_commit.message, 'v')"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          # Use a PAT so the push back to master bypasses branch protection
+          # (the bot's GITHUB_TOKEN would be blocked by required-PR rules).
+          # FLOWZONE_TOKEN was created during the Flowzone era; we reuse it
+          # for the release token role.
+          token: ${{ secrets.FLOWZONE_TOKEN }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+
+      - name: Compute next version from Change-type trailers
+        id: bump
+        run: |
+          set -euo pipefail
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            RANGE="${LAST_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+          BODY=$(git log "$RANGE" --format='%B')
+          if echo "$BODY" | grep -qiE '^Change-type:\s*major'; then
+            BUMP="major"
+          elif echo "$BODY" | grep -qiE '^Change-type:\s*minor'; then
+            BUMP="minor"
+          elif echo "$BODY" | grep -qiE '^Change-type:\s*patch'; then
+            BUMP="patch"
+          else
+            echo "No Change-type trailer in commits since ${LAST_TAG:-repo start}. Skipping release."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CURRENT=$(node -p "require('./package.json').version")
+          NEW=$(npx --yes semver -i "$BUMP" "$CURRENT")
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "Bumping $CURRENT -> $NEW ($BUMP)"
+
+      - name: Update version files
+        if: steps.bump.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          NEW="${{ steps.bump.outputs.new }}"
+          LAST_TAG="${{ steps.bump.outputs.last_tag }}"
+
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json'));
+            pkg.version = '$NEW';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            const lock = JSON.parse(fs.readFileSync('package-lock.json'));
+            lock.version = '$NEW';
+            if (lock.packages && lock.packages['']) lock.packages[''].version = '$NEW';
+            fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
+          "
+
+          # balena.yml
+          sed -i "s/^version: .*/version: $NEW/" balena.yml
+
+          # CHANGELOG.md: prepend a new section
+          DATE=$(date -u +%Y-%m-%d)
+          RANGE="${LAST_TAG:+${LAST_TAG}..}HEAD"
+          COMMITS=$(git log $RANGE --format='* %s' | grep -v '^\* v[0-9]' || true)
+          NEW_SECTION=$(printf "# v%s\n## (%s)\n\n%s\n" "$NEW" "$DATE" "$COMMITS")
+          {
+            head -n 5 CHANGELOG.md
+            echo ""
+            echo "$NEW_SECTION"
+            tail -n +6 CHANGELOG.md
+          } > CHANGELOG.md.new
+          mv CHANGELOG.md.new CHANGELOG.md
+
+      - name: Commit, tag, push
+        if: steps.bump.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          NEW="${{ steps.bump.outputs.new }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json balena.yml CHANGELOG.md
+          git commit -m "v$NEW"
+          git tag "v$NEW"
+          git push origin master
+          git push origin "v$NEW"
