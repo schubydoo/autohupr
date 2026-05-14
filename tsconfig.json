@@ -3,6 +3,7 @@
 		"module": "commonJS",
 		"outDir": "build",
 		"rootDir": "./src",
+		"types": ["node"],
 		"noUnusedParameters": true,
 		"noUnusedLocals": true,
 		"removeComments": true,
