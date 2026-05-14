@@ -2,18 +2,35 @@ name: autohupr
 type: sw.block
 version: 0.0.0
 description: >-
-  Automatically keep your balenaOS host release up-to-date with this block!
+  Automatically keep your balenaOS host release up-to-date with this block.
 assets:
   repository:
     type: blob.asset
     data:
       url: 'https://github.com/schubydoo/autohupr'
 data:
-  defaultDeviceType: fincm3
+  defaultDeviceType: genericx86-64-ext
   supportedDeviceTypes:
+    # amd64
+    - generic-amd64
     - genericx86-64-ext
     - intel-nuc
-    - fincm3
-    - raspberrypi3
+    - up-board
+    # aarch64
+    - generic-aarch64
     - raspberrypi3-64
     - raspberrypi4-64
+    - raspberrypi5
+    - raspberrypi0-2w-64
+    - raspberrypicm4-ioboard
+    - jetson-nano
+    - jetson-nano-emmc
+    - jetson-xavier-nx-devkit
+    - jetson-xavier-nx-devkit-emmc
+    - jetson-agx-orin-devkit
+    - jetson-orin-nano-devkit-nvme
+    # armv7hf
+    - raspberry-pi2
+    - raspberrypi3
+    - beaglebone-black
+    - fincm3
