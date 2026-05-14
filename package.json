@@ -27,7 +27,7 @@
   "homepage": "https://github.com/schubydoo/autohupr#readme",
   "dependencies": {
     "balena-sdk": "^23.2.0",
-    "ms": "3.0.0-canary.1"
+    "ms": "3.0.0-canary.202508261828"
   },
   "devDependencies": {
     "@balena/lint": "^9.4.3",
