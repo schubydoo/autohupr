@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":maintainLockFilesWeekly"
+  ],
+  "timezone": "America/New_York",
+  "schedule": ["before 5am on monday"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group all balena-sdk-related deps",
+      "matchPackagePatterns": ["^balena-"],
+      "groupName": "balena packages"
+    },
+    {
+      "description": "Auto-merge devDependency patch updates",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "Pin GitHub Actions to SHAs",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Alpine packages annotated with `# renovate: alpine-package=<name>` in Dockerfile.template",
+      "fileMatch": ["(^|/)Dockerfile(\\.template)?$"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*alpine-package=(?<depName>[\\w-]+)\\s*\\n\\s*ARG\\s+\\w+_VERSION=(?<currentValue>[\\d.]+)"
+      ],
+      "datasourceTemplate": "repology",
+      "versioningTemplate": "loose",
+      "packageNameTemplate": "alpine_3_23/{{depName}}"
+    }
+  ]
+}
