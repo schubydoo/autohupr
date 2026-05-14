@@ -1,6 +1,6 @@
 {
   "name": "autohupr",
-  "version": "0.2.0",
+  "version": "0.0.0",
   "description": "Automatically keep your balenaOS host release up-to-date with this block!",
   "main": "build/main.js",
   "private": true,
@@ -14,17 +14,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/balena-io-playground/balenahup-block.git"
+    "url": "git+https://github.com/schubydoo/autohupr.git"
   },
-  "author": "Kyle Harding <kyle@balena.io",
+  "author": "Schuby <schubydoo@users.noreply.github.com>",
   "license": "Apache-2.0",
   "engines": {
     "node": "^24.0.0"
   },
   "bugs": {
-    "url": "https://github.com/balena-io-playground/balenahup-block/issues"
+    "url": "https://github.com/schubydoo/autohupr/issues"
   },
-  "homepage": "https://github.com/balena-io-playground/balenahup-block#readme",
+  "homepage": "https://github.com/schubydoo/autohupr#readme",
   "dependencies": {
     "balena-sdk": "^23.2.0",
     "ms": "3.0.0-canary.1"
