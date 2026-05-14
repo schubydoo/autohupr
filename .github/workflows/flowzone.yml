@@ -16,6 +16,5 @@ jobs:
     with:
       # Block fork PRs from invoking arbitrary third-party actions.
       restrict_custom_actions: true
-      # TODO(setup): fill in once a test fleet exists, e.g. gh_schubydoo/autohupr-test.
-      # Leave empty for now — Flowzone skips the deploy step when this is unset.
-      balena_slugs: ""
+      # Three test fleets, one per supported arch.
+      balena_slugs: "marcus7/autohupr-test-aarch64,marcus7/autohupr-test-amd64,marcus7/autohupr-test-armv7hf"
