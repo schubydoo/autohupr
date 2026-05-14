@@ -28,6 +28,18 @@
       "description": "Pin GitHub Actions to SHAs",
       "matchManagers": ["github-actions"],
       "pinDigests": true
+    },
+    {
+      "description": "Group all docker/* GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["docker/**"],
+      "groupName": "docker actions"
+    },
+    {
+      "description": "Group all actions/* (official GitHub) Actions",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["actions/**"],
+      "groupName": "github actions"
     }
   ],
   "customManagers": [
