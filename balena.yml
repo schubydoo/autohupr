@@ -1,13 +1,13 @@
 name: autohupr
 type: sw.block
-version: 0.2.0
+version: 0.0.0
 description: >-
   Automatically keep your balenaOS host release up-to-date with this block!
 assets:
   repository:
     type: blob.asset
     data:
-      url: 'https://github.com/balena-labs-projects/autohupr'
+      url: 'https://github.com/schubydoo/autohupr'
 data:
   defaultDeviceType: fincm3
   supportedDeviceTypes:
