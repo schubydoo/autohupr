@@ -9,6 +9,7 @@
   "timezone": "America/New_York",
   "schedule": ["before 5am on monday"],
   "labels": ["dependencies"],
+  "commitBody": "Signed-off-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>",
   "packageRules": [
     {
       "description": "Group all balena-sdk-related deps",
