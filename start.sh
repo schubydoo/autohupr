@@ -50,12 +50,12 @@ validate_version() {
 	fi
 }
 
-# 1. Disabled via ENABLED_SERVICES (standard balena block behavior).
-if [ -n "${ENABLED_SERVICES:-}" ]; then
-	cleaned=$(printf '%s' "$ENABLED_SERVICES" | tr -d '[:space:]')
+# 1. Optional kill-switch: park if this service is named in DISABLED_SERVICES,
+#    so the block can be turned off without touching the target-version vars.
+if [ -n "${DISABLED_SERVICES:-}" ] && [ -n "${BALENA_SERVICE_NAME:-}" ]; then
+	cleaned=$(printf '%s' "$DISABLED_SERVICES" | tr -d '[:space:]')
 	case ",$cleaned," in
-	*",${BALENA_SERVICE_NAME:-}",*) : ;;
-	*) park "${BALENA_SERVICE_NAME:-service} is not in ENABLED_SERVICES." ;;
+	*",$BALENA_SERVICE_NAME,"*) park "$BALENA_SERVICE_NAME is in DISABLED_SERVICES." ;;
 	esac
 fi
 
