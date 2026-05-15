@@ -2,7 +2,7 @@ name: autohupr
 type: sw.block
 version: 0.5.1
 description: >-
-  Automatically keep your balenaOS host release up-to-date with this block.
+  Automatically keep your balenaOS host release and balena supervisor up to date with this block.
 assets:
   repository:
     type: blob.asset

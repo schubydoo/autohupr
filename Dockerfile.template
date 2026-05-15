@@ -27,7 +27,7 @@ ARG NODEJS_VERSION
 ARG TINI_VERSION
 ARG CURL_VERSION
 LABEL org.opencontainers.image.source="https://github.com/schubydoo/autohupr"
-LABEL org.opencontainers.image.description="Automatically keep balenaOS host releases up-to-date"
+LABEL org.opencontainers.image.description="Automatically keep your balenaOS host release and balena supervisor up to date with this block"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 RUN apk add --no-cache \
       "nodejs=${NODEJS_VERSION}" \

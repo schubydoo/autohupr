@@ -34,7 +34,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.description=Automatically keep balenaOS host releases and the balena supervisor up to date
+            org.opencontainers.image.description=Automatically keep your balenaOS host release and balena supervisor up to date with this block
       - id: build
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7
         with:
