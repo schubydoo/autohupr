@@ -50,11 +50,13 @@ jobs:
           fi
           CURRENT=$(node -p "require('./package.json').version")
           NEW=$(npx --yes semver -i "$BUMP" "$CURRENT")
-          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
-          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
-          echo "new=$NEW" >> "$GITHUB_OUTPUT"
-          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
-          echo "skip=false" >> "$GITHUB_OUTPUT"
+          {
+            echo "bump=$BUMP"
+            echo "current=$CURRENT"
+            echo "new=$NEW"
+            echo "last_tag=$LAST_TAG"
+            echo "skip=false"
+          } >> "$GITHUB_OUTPUT"
           echo "Bumping $CURRENT -> $NEW ($BUMP)"
 
       - name: Update version files
@@ -81,7 +83,7 @@ jobs:
           # CHANGELOG.md: prepend a new section
           DATE=$(date -u +%Y-%m-%d)
           RANGE="${LAST_TAG:+${LAST_TAG}..}HEAD"
-          COMMITS=$(git log $RANGE --format='* %s' | grep -v '^\* v[0-9]' || true)
+          COMMITS=$(git log "$RANGE" --format='* %s' | grep -v '^\* v[0-9]' || true)
           NEW_SECTION=$(printf "# v%s\n## (%s)\n\n%s\n" "$NEW" "$DATE" "$COMMITS")
           {
             head -n 5 CHANGELOG.md
