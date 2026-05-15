@@ -47,7 +47,7 @@ Both labels are required:
 | `SUPERVISOR_TARGET_VERSION` | one of these two | *(none)* | Supervisor target. `latest`, `recommended`, or a version family. Leave unset to disable supervisor updates. |
 | `HUP_CHECK_INTERVAL` | no | `1d` | Time between OS update checks. |
 | `SUPERVISOR_CHECK_INTERVAL` | no | `1d` | Time between supervisor update checks. |
-| `ENABLED_SERVICES` | no | *(unset)* | Standard balena multi-block control. If set and this service's name is not in the comma-separated list, the block parks itself. |
+| `DISABLED_SERVICES` | no | *(unset)* | Kill-switch. If this service's name appears in the comma-separated list, the block parks itself — a quick way to turn it off without changing the target-version variables. |
 
 At least one of `HUP_TARGET_VERSION` / `SUPERVISOR_TARGET_VERSION` must be set —
 the block uses whichever is set and ignores the other. You can run it as an
@@ -91,7 +91,7 @@ until it settles.
 Instead of crash-looping on bad input, the block asks the balena supervisor to
 stop this service (and then idles) when:
 
-- the service is excluded via `ENABLED_SERVICES`,
+- the service is named in `DISABLED_SERVICES` (kill-switch),
 - neither `HUP_TARGET_VERSION` nor `SUPERVISOR_TARGET_VERSION` is set, or
 - any provided value is invalid.
 

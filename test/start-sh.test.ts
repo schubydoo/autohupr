@@ -36,15 +36,19 @@ const run = (env: Record<string, string>): string => {
 const proceeded = (out: string) => out.includes('NODE-EXEC');
 const parked = (out: string) => !proceeded(out);
 
-test('parks when not in ENABLED_SERVICES', opts, () => {
-	const out = run({ ENABLED_SERVICES: 'other', BALENA_SERVICE_NAME: 'autohupr' });
+test('parks when listed in DISABLED_SERVICES (kill-switch)', opts, () => {
+	const out = run({
+		DISABLED_SERVICES: 'foo, autohupr ,bar',
+		BALENA_SERVICE_NAME: 'autohupr',
+		HUP_TARGET_VERSION: 'recommended',
+	});
 	assert.ok(parked(out));
-	assert.match(out, /ENABLED_SERVICES/);
+	assert.match(out, /DISABLED_SERVICES/);
 });
 
-test('proceeds when in ENABLED_SERVICES with valid config', opts, () => {
+test('proceeds when not listed in DISABLED_SERVICES', opts, () => {
 	const out = run({
-		ENABLED_SERVICES: 'foo, autohupr ,bar',
+		DISABLED_SERVICES: 'foo,bar',
 		BALENA_SERVICE_NAME: 'autohupr',
 		HUP_TARGET_VERSION: 'recommended',
 	});
