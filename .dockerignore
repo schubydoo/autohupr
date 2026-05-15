@@ -1,5 +1,23 @@
+# Keep the build context minimal: only what the image build needs
+# (package.json, package-lock.json, tsconfig.json, src/, start.sh).
 node_modules/
 build/
+build-test/
+test/
+tsconfig.test.json
 .git/
 .github/
 .versionbot/
+.vscode/
+assets/
+*.md
+LICENSE
+NOTICE
+renovate.json
+.gitattributes
+.gitignore
+.editorconfig
+.prettierrc*
+.prettierignore
+.dockerignore
+.balena/
