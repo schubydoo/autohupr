@@ -50,7 +50,7 @@
         "/(^|/)Dockerfile(\\.template)?$/"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*alpine-package=(?<depName>[\\w-]+)\\s*\\n\\s*ARG\\s+\\w+_VERSION=(?<currentValue>[\\d.]+)"
+        "#\\s*renovate:\\s*alpine-package=(?<depName>[\\w-]+)\\s*\\n\\s*ARG\\s+\\w+_VERSION=(?<currentValue>[\\d.]+-r\\d+)"
       ],
       "datasourceTemplate": "repology",
       "versioningTemplate": "loose",

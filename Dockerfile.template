@@ -5,14 +5,14 @@ LABEL org.opencontainers.image.description="Automatically keep balenaOS host rel
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 
 # renovate: alpine-package=nodejs
-ARG NODEJS_VERSION=24
+ARG NODEJS_VERSION=24.14.1-r0
 
 # renovate: alpine-package=npm
-ARG NPM_VERSION=11
+ARG NPM_VERSION=11.11.0-r0
 
 RUN apk add --no-cache \
-      "nodejs=~${NODEJS_VERSION}" \
-      "npm=~${NPM_VERSION}" \
+      "nodejs=${NODEJS_VERSION}" \
+      "npm=${NPM_VERSION}" \
       tini \
       && addgroup -S app && adduser -S app -G app
 
