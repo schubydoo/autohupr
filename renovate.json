@@ -42,6 +42,19 @@
       "groupName": "github actions"
     },
     {
+      "description": "Group security / supply-chain GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": [
+        "github/codeql-action",
+        "ossf/scorecard-action",
+        "aquasecurity/trivy-action",
+        "sigstore/cosign-installer",
+        "anchore/sbom-action",
+        "softprops/action-gh-release"
+      ],
+      "groupName": "security actions"
+    },
+    {
       "description": "Limit alpine base image lookups to semver versions (suppresses date-snapshot tag noise)",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["alpine"],
