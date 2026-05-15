@@ -1,6 +1,6 @@
 {
   "name": "autohupr",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Automatically keep your balenaOS host release and balena supervisor up to date with this block.",
   "main": "build/main.js",
   "private": true,
