@@ -8,7 +8,6 @@
 
 ## Checklist
 
-- [ ] `Change-type:` trailer set on the commit(s)
-- [ ] `Signed-off-by:` present on every commit
+- [ ] One logical change per PR
+- [ ] `Change-type:` trailer set on the commit(s) (omit only for intentional no-release commits)
 - [ ] `npm test` passes locally
-- [ ] Docs updated if behavior changed
