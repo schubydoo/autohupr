@@ -106,7 +106,7 @@ ships a Software Bill of Materials:
 # Verify the image signature (Sigstore keyless / GitHub OIDC)
 cosign verify ghcr.io/schubydoo/autohupr:<version> \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --certificate-identity-regexp '^https://github.com/schubydoo/autohupr/\.github/workflows/.+'
+  --certificate-identity-regexp 'https://github.com/schubydoo/autohupr/[.]github/workflows/publish-ghcr[.]yml@refs/tags/.+'
 
 # Inspect the buildx SBOM + provenance attestations baked into the image
 docker buildx imagetools inspect ghcr.io/schubydoo/autohupr:<version> \
