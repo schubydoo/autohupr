@@ -5,11 +5,12 @@
   "main": "build/main.js",
   "private": true,
   "scripts": {
-    "clean": "rimraf build",
-    "build": "npm run clean && tsc",
+    "clean": "rimraf build build-test",
+    "build": "rimraf build && tsc",
+    "build:test": "rimraf build-test && tsc -p tsconfig.test.json",
     "lint": "balena-lint -t tsconfig.json src",
     "lint-fix": "balena-lint -t tsconfig.json --fix src",
-    "test": "npm run lint && npm run build",
+    "test": "npm run lint && npm run build && npm run build:test && node --test \"build-test/test/**/*.test.js\"",
     "prepack": "npm run build"
   },
   "repository": {
