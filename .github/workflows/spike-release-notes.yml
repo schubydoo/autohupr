@@ -8,13 +8,15 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'inventory (read-only) | write | revert'
+        description: 'what to do against the live default release'
         type: choice
         required: true
         default: inventory
         options:
           - inventory
           - write
+          - write-note
+          - write-asset
           - revert
 
 permissions:
