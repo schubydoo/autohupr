@@ -3,6 +3,56 @@ type: sw.block
 version: 0.5.2
 description: >-
   Automatically keep your balenaOS host release and balena supervisor up to date with this block.
+post-provisioning: |
+  ![autohupr](https://raw.githubusercontent.com/schubydoo/autohupr/master/assets/logo.png)
+
+  **A drop-in, headless block that automatically keeps your balenaOS host OS and
+  balena supervisor up to date. Set a target version and autohupr performs host
+  OS updates (HUP) and supervisor pinning for you — no dashboard clicks, no
+  manual `os-update` runs.**
+
+  ## What it does
+
+  - **Host OS updates (HUP)** — tracks a balenaOS version family and updates the
+    host when a newer in-family release becomes available.
+  - **Supervisor pinning** — keeps the balena supervisor at your chosen target.
+  - **Safe by default** — never jumps across version families, converges the
+    supervisor before checking OS updates, and parks itself instead of
+    crash-looping on bad input.
+
+  ## Quick start
+
+  Add the block to your `docker-compose.yml`:
+
+  ```yaml
+  services:
+    autohupr:
+      image: bh.cr/schubydoo/autohupr
+      tmpfs:
+        - /tmp/work
+      labels:
+        io.balena.features.balena-api: 1
+        io.balena.features.supervisor-api: 1
+  ```
+
+  Then set at least one target version (as a device or fleet variable):
+
+  - `HUP_TARGET_VERSION` — balenaOS target: `latest`, `recommended`, or a
+    version family (e.g. `6.12` tracks the newest `6.12.x`, `6.12.3` the newest
+    revision of that patch, `6.12.3+rev4` an exact pin).
+  - `SUPERVISOR_TARGET_VERSION` — supervisor target: the same forms, without a
+    revision suffix.
+
+  Optional: `HUP_CHECK_INTERVAL` / `SUPERVISOR_CHECK_INTERVAL` (default `1d`,
+  minimum `30m`) and `DISABLED_SERVICES` as a kill-switch. At least one target
+  version must be set; the block runs as an OS-only updater, a supervisor-only
+  updater, or both.
+
+  ## Documentation
+
+  Full configuration, version-family rules, parking behaviour, and supply-chain
+  verification (Cosign signatures + SBOM) are documented in the
+  [project README](https://github.com/schubydoo/autohupr#readme).
 assets:
   repository:
     type: blob.asset
