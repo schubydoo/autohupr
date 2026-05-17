@@ -58,6 +58,16 @@ export const compareParsed = (a: ParsedVersion, b: ParsedVersion): number => {
 	return a.rev - b.rev;
 };
 
+/** Variant-insensitive equality (ignores `.prod`/`.dev`, `v` prefix, etc.). */
+export const versionsEqual = (a: string, b: string): boolean =>
+	compareParsed(parseVersion(a), parseVersion(b)) === 0;
+
+/** Does the running version already belong to the user's target family/pin? */
+export const satisfiesTarget = (
+	userValue: string,
+	currentVersion: string,
+): boolean => resolveFamily(userValue, [currentVersion]) !== null;
+
 const matchesPrefix = (core: number[], prefix: number[]): boolean =>
 	core.length >= prefix.length && prefix.every((p, i) => core[i] === p);
 

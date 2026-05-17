@@ -5,6 +5,8 @@ import {
 	parseUserValue,
 	parseVersion,
 	resolveFamily,
+	satisfiesTarget,
+	versionsEqual,
 } from '../src/version';
 
 const OS = ['17.2.0', '17.1.5', '17.1.5+rev2', '17.10.0', '17.1.4'];
@@ -63,6 +65,20 @@ test('parseUserValue: prefix length + optional rev pin', () => {
 		rev: 3,
 	});
 	assert.deepEqual(parseUserValue('latest'), { prefix: [], rev: null });
+});
+
+test('versionsEqual: variant suffix is ignored', () => {
+	assert.equal(versionsEqual('6.12.3+rev4', '6.12.3+rev4.prod'), true);
+	assert.equal(versionsEqual('v6.12.3+rev4', '6.12.3+rev4'), true);
+	assert.equal(versionsEqual('6.12.3+rev4', '6.12.3+rev5'), false);
+	assert.equal(versionsEqual('6.12.3', '6.12.4'), false);
+});
+
+test('satisfiesTarget: running version matched family-aware', () => {
+	assert.equal(satisfiesTarget('6.12.3+rev4', '6.12.3+rev4.prod'), true);
+	assert.equal(satisfiesTarget('6.12.3', '6.12.3+rev4.prod'), true);
+	assert.equal(satisfiesTarget('6.12.3+rev4', '6.12.3+rev5.prod'), false);
+	assert.equal(satisfiesTarget('6.13', '6.12.3+rev4.prod'), false);
 });
 
 test('compareParsed: core then rev ordering', () => {
