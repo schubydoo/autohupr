@@ -15,18 +15,29 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Push release to balena block
+        id: deploy
         uses: balena-io/deploy-to-balena-action@a1ad4ddddc982b50533e86d3fdc4731c5184f497 # v2.2.3
         with:
           balena_token: ${{ secrets.BALENA_API_KEY }}
           fleet: marcus7/autohupr
 
+      # The balenaHub "Release notes" panel renders the release `note` field.
+      # The official asset action below cannot set that, so a tiny SDK step does.
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version-file: package.json
           cache: npm
       - run: npm ci
-      - name: Set release notes + upload CHANGELOG asset
-        run: node scripts/publish-release-notes.mjs
+      - name: Set balenaHub release notes
+        run: node scripts/set-release-note.mjs
         env:
           BALENA_API_KEY: ${{ secrets.BALENA_API_KEY }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
+          RELEASE_ID: ${{ steps.deploy.outputs.release_id }}
+
+      - name: Upload CHANGELOG.md as a release asset
+        uses: balena-io/upload-balena-release-asset@52cceb8fc25e0bfdb433b92567a434d1a5baecda # v0.1.6
+        with:
+          balena-token: ${{ secrets.BALENA_API_KEY }}
+          release-id: ${{ steps.deploy.outputs.release_id }}
+          path: CHANGELOG.md
+          overwrite: 'true'
