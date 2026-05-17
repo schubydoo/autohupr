@@ -203,6 +203,47 @@ test('managed but already up to date: no pin, converged, OS proceeds', async () 
 	assert.deepEqual(h.osUpdates, ['5.1.36']);
 });
 
+test('managed: `v`-prefixed current at target → no pin, converged', async () => {
+	// balena reports supervisor_version as `v17.1.5`; the pin target /
+	// raw_version is `17.1.5`. Must be treated as already converged — not
+	// re-pinned every cycle.
+	const h = makeHarness({
+		supervisor: 'v17.1.5',
+		supervisorReleases: ['17.1.5'],
+	});
+	const svc = createService(
+		h.sdk,
+		config({ supervisorTargetVersion: '17.1', userTargetVersion: '5' }),
+		immediate,
+	);
+	await svc.runSupervisorCycle();
+	assert.deepEqual(h.pin, []);
+	assert.equal(svc.getState().supervisorConverged, true);
+});
+
+test('awaitConvergence accepts a `v`-prefixed report (no cap warning)', async () => {
+	const h = makeHarness({ supervisor: 'v17.1.5' });
+	const svc = createService(
+		h.sdk,
+		config({ supervisorTargetVersion: '17.1', userTargetVersion: '5' }),
+		immediate,
+	);
+	const warnings: string[] = [];
+	const origWarn = console.warn;
+	console.warn = (msg?: unknown): void => {
+		warnings.push(String(msg));
+	};
+	try {
+		await svc.awaitConvergence('17.1.5');
+	} finally {
+		console.warn = origWarn;
+	}
+	assert.equal(svc.getState().supervisorConverged, true);
+	// Success path returns on the first matching poll; the buggy `===`
+	// comparison would exhaust all 30 polls and warn.
+	assert.deepEqual(warnings, []);
+});
+
 test('convergence cap forces progress so OS is not blocked forever', async () => {
 	const h = makeHarness({
 		supervisor: '17.0.0',

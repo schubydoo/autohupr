@@ -110,6 +110,15 @@ const getExpandedProp = <T extends object, K extends keyof T>(
 	key: K,
 ): T[K] | undefined => (Array.isArray(obj) ? obj[0]?.[key] : undefined);
 
+/**
+ * Nullable-safe, `v`-prefix / variant-insensitive version equality. balena
+ * reports `supervisor_version` with a leading `v`, while `raw_version` (the
+ * pin target) has none; compare through `versionsEqual` so the supervisor
+ * path matches the OS path and does not falsely re-pin / stall convergence.
+ */
+const sameVersion = (a: string | undefined, b: string | undefined): boolean =>
+	a != null && b != null && versionsEqual(a, b);
+
 const SUPERVISOR_CONVERGE_MAX_POLLS = 30;
 const SUPERVISOR_GATE_POLL = '5s' as StringValue;
 const ERROR_BACKOFF_START_MS = 60_000;
@@ -253,7 +262,7 @@ export const createService = (
 			i++
 		) {
 			await delayFn('2m');
-			if ((await getCurrentSupervisor(deviceUuid)) === target) {
+			if (sameVersion(await getCurrentSupervisor(deviceUuid), target)) {
 				supervisorConverged = true;
 				return;
 			}
@@ -276,7 +285,7 @@ export const createService = (
 			releases,
 		);
 
-		if (target && target !== current) {
+		if (target && !sameVersion(target, current)) {
 			console.log(`Pinning supervisor: ${current} -> ${target}`);
 			await sdk.models.device.pinToSupervisorRelease(deviceUuid, target);
 			await awaitConvergence(target);
