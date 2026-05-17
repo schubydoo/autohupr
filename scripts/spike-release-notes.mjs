@@ -6,7 +6,11 @@
 //   1. balena.models.release.setNote(releaseId, text)
 //   2. balena.models.release.asset.upload({ asset, asset_key, release })  (CHANGELOG.md)
 //
-// MODE env var: inventory (read-only, default) | write | revert
+// MODE env var: inventory (read-only, default) | write | write-note |
+//               write-asset | revert
+//   write       — setNote AND CHANGELOG.md asset (both, ambiguous)
+//   write-note  — setNote only (no asset)   → isolates the note path
+//   write-asset — CHANGELOG.md asset only (no note) → isolates the asset path
 // Auth: BALENA_API_KEY env var (an API key works with auth.loginWithToken).
 // Target app: BLOCK_SLUG env var (default marcus7/autohupr).
 
@@ -143,26 +147,30 @@ async function main() {
 		return;
 	}
 
-	if (MODE === 'write') {
-		const changelog = await readFile(CHANGELOG_PATH, 'utf8');
-		const noteText = `${NOTE_MARKER}\n\n${topChangelogSection(changelog)}`;
-
-		console.log(`\nMODE=write — setNote on release ${target.id}...`);
-		await balena.models.release.setNote(target.id, noteText);
-		console.log('  setNote OK');
-
-		console.log(
-			`MODE=write — uploading ${ASSET_KEY} asset to release ${target.id}...`,
-		);
-		const asset = await balena.models.release.asset.upload(
-			{
-				asset: CHANGELOG_PATH,
-				asset_key: ASSET_KEY,
-				release: target.id,
-			},
-			{ overwrite: true },
-		);
-		console.log(`  asset.upload OK: ${JSON.stringify(asset)}`);
+	const doNote = MODE === 'write' || MODE === 'write-note';
+	const doAsset = MODE === 'write' || MODE === 'write-asset';
+	if (doNote || doAsset) {
+		if (doNote) {
+			const changelog = await readFile(CHANGELOG_PATH, 'utf8');
+			const noteText = `${NOTE_MARKER}\n\n${topChangelogSection(changelog)}`;
+			console.log(`\nMODE=${MODE} — setNote on release ${target.id}...`);
+			await balena.models.release.setNote(target.id, noteText);
+			console.log('  setNote OK');
+		}
+		if (doAsset) {
+			console.log(
+				`\nMODE=${MODE} — uploading ${ASSET_KEY} asset to release ${target.id}...`,
+			);
+			const asset = await balena.models.release.asset.upload(
+				{
+					asset: CHANGELOG_PATH,
+					asset_key: ASSET_KEY,
+					release: target.id,
+				},
+				{ overwrite: true },
+			);
+			console.log(`  asset.upload OK: ${JSON.stringify(asset)}`);
+		}
 		console.log(
 			'\nNow check https://hub.balena.io/blocks/2363450/autohupr "Release notes".',
 		);
@@ -189,7 +197,9 @@ async function main() {
 		return;
 	}
 
-	die(`Unknown MODE "${MODE}" (expected inventory|write|revert).`);
+	die(
+		`Unknown MODE "${MODE}" (expected inventory|write|write-note|write-asset|revert).`,
+	);
 }
 
 main().catch((err) => die('Spike failed.', err));
