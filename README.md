@@ -122,6 +122,13 @@ also scanned by CodeQL, Trivy, and OSSF Scorecard.
 See [CONTRIBUTING.md](CONTRIBUTING.md). Releases are automated from
 `Change-type:` commit trailers.
 
+## Acknowledgements
+
+The resilient retry/backoff loop and the single-call device fetch were informed
+by [Teko012](https://github.com/Teko012)'s `supervisor-update.cjs` sidecar, as
+[shipped in `ketilmo/balena-ads-b`](https://github.com/ketilmo/balena-ads-b/blob/master/autohupr/supervisor-update.cjs).
+Thanks for the prior art.
+
 ## License
 
 [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution.
