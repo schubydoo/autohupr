@@ -3,7 +3,13 @@ import { getSdk, type BalenaSDK } from 'balena-sdk';
 // and 3.x has no stable release yet.
 import type { StringValue } from 'ms';
 import ms from 'ms';
-import { compareParsed, parseVersion, resolveFamily } from './version';
+import {
+	compareParsed,
+	parseVersion,
+	resolveFamily,
+	satisfiesTarget,
+	versionsEqual,
+} from './version';
 
 /** Functional state of HUP on device for our purposes. */
 enum HupStatus {
@@ -39,8 +45,9 @@ export type OsDecision =
 /**
  * Pure: decide the OS target. `latest`/`recommended` use the API's recommended
  * release; a version family floats to the highest in-family release. Skips
- * (never a forced cross-family jump) when unset, no eligible release, or
- * already on the highest in-family version.
+ * (never a forced cross-family jump) when unset, already satisfying the target
+ * (compared variant-insensitively against the running version, since the
+ * supported-update list excludes the version in use), or no eligible release.
  */
 export const selectOsTarget = (
 	userTargetVersion: string,
@@ -50,23 +57,31 @@ export const selectOsTarget = (
 	if (userTargetVersion === '') {
 		return { action: 'skip', reason: 'HUP_TARGET_VERSION not set' };
 	}
-	const target =
-		userTargetVersion === 'recommended' || userTargetVersion === 'latest'
-			? (osUpdateVersions.recommended ?? null)
-			: resolveFamily(userTargetVersion, osUpdateVersions.versions);
-	if (!target) {
+	const isRecommended =
+		userTargetVersion === 'recommended' || userTargetVersion === 'latest';
+	const upgradeTarget = isRecommended
+		? (osUpdateVersions.recommended ?? null)
+		: resolveFamily(userTargetVersion, osUpdateVersions.versions);
+
+	if (upgradeTarget && !versionsEqual(upgradeTarget, currentVersion)) {
+		return { action: 'update', version: upgradeTarget };
+	}
+
+	const alreadySatisfied = isRecommended
+		? osUpdateVersions.recommended != null &&
+			versionsEqual(osUpdateVersions.recommended, currentVersion)
+		: satisfiesTarget(userTargetVersion, currentVersion);
+
+	if (alreadySatisfied) {
 		return {
 			action: 'skip',
-			reason: `no eligible release for "${userTargetVersion}"`,
+			reason: `OS up to date at ${currentVersion} (target "${userTargetVersion}")`,
 		};
 	}
-	if (target === currentVersion) {
-		return {
-			action: 'skip',
-			reason: `already on highest in family (${currentVersion})`,
-		};
-	}
-	return { action: 'update', version: target };
+	return {
+		action: 'skip',
+		reason: `no eligible release for "${userTargetVersion}"`,
+	};
 };
 
 /**
@@ -96,6 +111,7 @@ const getExpandedProp = <T extends object, K extends keyof T>(
 ): T[K] | undefined => (Array.isArray(obj) ? obj[0]?.[key] : undefined);
 
 const SUPERVISOR_CONVERGE_MAX_POLLS = 30;
+const SUPERVISOR_GATE_POLL = '5s' as StringValue;
 
 /**
  * Build the update service. `sdk` and `delayFn` are injected so the loops can
@@ -285,11 +301,13 @@ export const createService = (
 
 		// Supervisor updates run first: the supported OS target depends on the
 		// settled supervisor version.
-		while (supervisorManaged && !supervisorConverged && shouldContinue()) {
+		if (supervisorManaged && !supervisorConverged && shouldContinue()) {
 			console.log(
 				'Waiting for supervisor to converge before checking OS updates...',
 			);
-			await delayFn('2m');
+			while (supervisorManaged && !supervisorConverged && shouldContinue()) {
+				await delayFn(SUPERVISOR_GATE_POLL);
+			}
 		}
 
 		const deviceType = await getDeviceType(deviceUuid);

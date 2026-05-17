@@ -124,10 +124,18 @@ test('selectOsTarget: family / recommended / equality / skip', () => {
 	assert.equal(selectOsTarget('17.9', v, '17.0.0').action, 'skip');
 	const noop = selectOsTarget('17.1', v, '17.1.5');
 	assert.equal(noop.action, 'skip');
-	assert.match(
-		(noop as { reason: string }).reason,
-		/already on highest in family/,
+	assert.match((noop as { reason: string }).reason, /OS up to date/);
+
+	// Real-world repro: device is already on the target, but the supported
+	// upgrade list excludes the running version and it carries a `.prod`
+	// variant suffix. Must report "up to date", not "no eligible release".
+	const onTarget = selectOsTarget(
+		'6.12.3+rev4',
+		{ versions: [], recommended: null },
+		'6.12.3+rev4.prod',
 	);
+	assert.equal(onTarget.action, 'skip');
+	assert.match((onTarget as { reason: string }).reason, /OS up to date/);
 });
 
 test('selectSupervisorTarget: unset / latest / family / none', () => {
