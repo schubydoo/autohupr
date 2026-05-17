@@ -35,11 +35,13 @@ post-provisioning: |
 
   Then set at least one target version (as a device or fleet variable):
 
-  - **HUP_TARGET_VERSION** — balenaOS target: latest, recommended, or a version
-    family (e.g. 6.12 tracks the newest 6.12.x, 6.12.3 the newest revision of
-    that patch, 6.12.3+rev4 an exact pin).
-  - **SUPERVISOR_TARGET_VERSION** — supervisor target: the same forms, without a
-    revision suffix.
+  - **HUP_TARGET_VERSION** — balenaOS target: latest/recommended (balena's
+    recommended balenaOS release), or a version family (e.g. 6.12 tracks the
+    newest 6.12.x, 6.12.3 the newest revision of that patch, 6.12.3+rev4 an
+    exact pin).
+  - **SUPERVISOR_TARGET_VERSION** — supervisor target: a version family (same
+    forms, no revision suffix); latest/recommended track the newest available
+    supervisor release (balena publishes no separate recommended supervisor).
 
   Optional: **HUP_CHECK_INTERVAL** / **SUPERVISOR_CHECK_INTERVAL** (default 1d,
   minimum 30m) and **DISABLED_SERVICES** as a kill-switch. At least one target

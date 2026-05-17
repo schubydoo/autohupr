@@ -44,7 +44,7 @@ Both labels are required:
 | Variable | Required | Default | Notes |
 |----------|----------|---------|-------|
 | `HUP_TARGET_VERSION` | one of these two | *(none)* | balenaOS target. `latest`, `recommended`, or a version family (see below). Leave unset to disable OS updates. |
-| `SUPERVISOR_TARGET_VERSION` | one of these two | *(none)* | Supervisor target. `latest`, `recommended`, or a version family. Leave unset to disable supervisor updates. |
+| `SUPERVISOR_TARGET_VERSION` | one of these two | *(none)* | Supervisor target. `latest`/`recommended` (newest available supervisor release — balena publishes no separate "recommended" supervisor), or a version family. Leave unset to disable supervisor updates. |
 | `HUP_CHECK_INTERVAL` | no | `1d` | Time between OS update checks. |
 | `SUPERVISOR_CHECK_INTERVAL` | no | `1d` | Time between supervisor update checks. |
 | `DISABLED_SERVICES` | no | *(unset)* | Kill-switch. If this service's name appears in the comma-separated list, the block parks itself — a quick way to turn it off without changing the target-version variables. |
@@ -65,12 +65,14 @@ release in that family.
 | `17.1` | newest `17.1.x` (e.g. `17.1.5`) | `17.2`, `17.10` |
 | `17.1.1` | that patch, newest revision | `17.1.2` |
 | `17.1.1+rev2` | exactly that release | anything else |
-| `latest` / `recommended` | balena's recommended release | — |
+| `latest` / `recommended` | **OS:** balena's recommended balenaOS release. **Supervisor:** the newest available supervisor release. | — |
 
-`SUPERVISOR_TARGET_VERSION` accepts the same forms but **without** a revision
-suffix (supervisor releases are always `X.X.X`). If no release in the supported
-set matches the family, the block logs it and skips — it never jumps to a
-different family.
+`SUPERVISOR_TARGET_VERSION` accepts the same *family* forms but **without** a
+revision suffix (supervisor releases are always `X.X.X`). Note its
+`latest`/`recommended` resolve to the **newest available** supervisor release,
+not a balena-recommended one — unlike the OS, balena does not publish a
+"recommended" supervisor. If no release in the supported set matches the
+family, the block logs it and skips — it never jumps to a different family.
 
 ### Check intervals
 
