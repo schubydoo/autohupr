@@ -61,7 +61,7 @@ assets:
   logo:
     type: blob.asset
     data:
-      url: 'https://raw.githubusercontent.com/schubydoo/autohupr/master/assets/logo.png'
+      url: 'https://raw.githubusercontent.com/schubydoo/autohupr/4e1e5e8cd7bcfcabcb37c1dcfd5eb5c774913c74/assets/logo.png'
 data:
   defaultDeviceType: genericx86-64-ext
   supportedDeviceTypes:
