@@ -127,7 +127,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Releases are automated from
 The resilient retry/backoff loop and the single-call device fetch were informed
 by [Teko012](https://github.com/Teko012)'s `supervisor-update.cjs` sidecar, as
 [shipped in `ketilmo/balena-ads-b`](https://github.com/ketilmo/balena-ads-b/blob/master/autohupr/supervisor-update.cjs).
-Thanks for the prior art.
 
 ## License
 
