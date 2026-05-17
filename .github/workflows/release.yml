@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 permissions:
-  contents: write
+  contents: read # push back to master uses RELEASE_TOKEN (PAT), not GITHUB_TOKEN
 
 jobs:
   release:

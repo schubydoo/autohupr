@@ -5,13 +5,15 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: write
-  packages: write
-  id-token: write
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write # softprops/action-gh-release creates the GitHub release
+      packages: write # push image to GHCR
+      id-token: write # cosign keyless signing (OIDC)
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4
