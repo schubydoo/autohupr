@@ -86,6 +86,11 @@ When both features are enabled, the supervisor is brought to its target
 running supervisor, so the supervisor is converged first; OS update checks wait
 until it settles.
 
+Once the supervisor is pinned, the block polls for it to reach the target for up
+to ~60 min (30 checks, 2 min apart) before resuming OS update checks. If it has
+not converged by then, OS checks resume anyway so they are never blocked
+indefinitely.
+
 ### Parking
 
 Instead of crash-looping on bad input, the block asks the balena supervisor to

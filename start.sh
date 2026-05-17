@@ -68,7 +68,7 @@ fi
 # 3. Sanitize any values that are set.
 if [ -n "${HUP_TARGET_VERSION:-}" ]; then
 	validate_version HUP_TARGET_VERSION "$HUP_TARGET_VERSION" \
-		'^(latest|recommended|[0-9]+(\.[0-9]+){0,2}([+.]?rev-?[0-9]+)?)$'
+		'^(latest|recommended|[0-9]+(\.[0-9]+){0,2}(\+rev[0-9]+)?)$'
 fi
 if [ -n "${SUPERVISOR_TARGET_VERSION:-}" ]; then
 	validate_version SUPERVISOR_TARGET_VERSION "$SUPERVISOR_TARGET_VERSION" \

@@ -72,6 +72,12 @@ test('proceeds on a valid HUP version family', opts, () => {
 	assert.ok(proceeded(run({ HUP_TARGET_VERSION: '17.1.1+rev2' })));
 });
 
+test('HUP version gate rejects malformed rev forms', opts, () => {
+	for (const bad of ['17rev2', '17.1.rev-2', '17.1.1+rev-2']) {
+		assert.ok(parked(run({ HUP_TARGET_VERSION: bad })), `${bad} should park`);
+	}
+});
+
 test('supervisor target rejects rev/v forms', opts, () => {
 	assert.ok(parked(run({ SUPERVISOR_TARGET_VERSION: '14.13.7+rev1' })));
 	assert.ok(parked(run({ SUPERVISOR_TARGET_VERSION: 'v14.13.7' })));
