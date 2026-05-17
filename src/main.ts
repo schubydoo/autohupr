@@ -363,7 +363,7 @@ export const createService = (
 	//
 	// The backoff loop and the single-call $expand device fetch are adapted
 	// from Teko012's supervisor-update.cjs sidecar:
-	// https://github.com/ketilmo/balena-ads-b/blob/master/autohupr/supervisor-update.cjs
+	// https://github.com/ketilmo/balena-ads-b/blob/f5c2bff718c6019bec24273761de1ce60e5da5b1/autohupr/supervisor-update.cjs
 	const runLoop = async (
 		cycle: () => Promise<void>,
 		intervalMs: number,
