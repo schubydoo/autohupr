@@ -89,13 +89,16 @@ until it settles.
 ### Parking
 
 Instead of crash-looping on bad input, the block asks the balena supervisor to
-stop this service (and then idles) when:
+**stop this container** when:
 
 - the service is named in `DISABLED_SERVICES` (kill-switch),
 - neither `HUP_TARGET_VERSION` nor `SUPERVISOR_TARGET_VERSION` is set, or
 - any provided value is invalid.
 
-This requires `io.balena.features.supervisor-api: 1`. The reason is logged.
+The reason is logged, then the container holds (without crash-looping) until the
+supervisor tears it down. This requires `io.balena.features.supervisor-api: 1`;
+without that label the stop request cannot be delivered, so the container can
+only hold in this degraded state rather than stopping cleanly.
 
 ## Supply chain & verification
 

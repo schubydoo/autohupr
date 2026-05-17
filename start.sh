@@ -1,10 +1,11 @@
 #!/bin/sh
 set -eu
 
-# Park the container: ask the balena supervisor to stop this service so it does
-# not crash-loop, then idle until the supervisor tears it down. The curl may
-# fail if the supervisor-api label is absent; we still idle (parked, not
-# crash-looping) in that case.
+# Park: request that the balena supervisor stop this container (via the
+# supervisor stop-service API), then hold on `tail -f /dev/null` purely so we do
+# not crash-loop while waiting for the supervisor to tear the container down.
+# If the supervisor-api label is absent the stop request cannot be delivered;
+# we still hold in that degraded state rather than crash-loop.
 park() {
 	echo "autohupr: $1"
 	echo "autohupr: requesting supervisor to stop this service..."
