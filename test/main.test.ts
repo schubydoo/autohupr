@@ -49,24 +49,30 @@ const makeHarness = (overrides: Partial<FakeState> = {}): Harness => {
 		getOsVersion: () => state.osVersion,
 		get: async (_uuid: string, options?: Record<string, unknown>) => {
 			const select = (options?.$select as string[] | undefined) ?? [];
-			if (select.includes('supervisor_version')) {
-				return { supervisor_version: state.supervisor };
-			}
 			if (select.includes('status')) {
 				return { status: state.status, provisioning_state: 'idle' };
 			}
 			const expand = options?.$expand as
 				| Record<string, { $expand?: unknown }>
 				| undefined;
-			if (expand?.is_of__device_type?.$expand) {
+			if (expand?.is_of__device_type) {
+				// Combined getDeviceInfo fetch: supervisor + OS fields + nested
+				// device-type / CPU-arch expansion in a single call.
 				return {
+					supervisor_version: state.supervisor,
+					os_version: state.osVersion,
+					os_variant: 'prod',
 					is_of__device_type: [
-						{ is_of__cpu_architecture: [{ slug: 'aarch64' }] },
+						{
+							slug: 'raspberrypi4-64',
+							is_of__cpu_architecture: [{ slug: 'aarch64' }],
+						},
 					],
 				};
 			}
-			if (expand?.is_of__device_type) {
-				return { is_of__device_type: [{ slug: 'raspberrypi4-64' }] };
+			if (select.includes('supervisor_version')) {
+				// Lightweight convergence poll (awaitConvergence).
+				return { supervisor_version: state.supervisor };
 			}
 			return {};
 		},
@@ -211,4 +217,64 @@ test('convergence cap forces progress so OS is not blocked forever', async () =>
 	await svc.runSupervisorCycle();
 	assert.deepEqual(h.pin, ['17.1.5']);
 	assert.equal(svc.getState().supervisorConverged, true);
+});
+
+// --- resilient loop runner --------------------------------------------------
+
+const setLogin = (h: Harness, fn: () => Promise<void>): void => {
+	(
+		h.sdk.auth as unknown as { loginWithToken: () => Promise<void> }
+	).loginWithToken = fn;
+};
+
+test('runLoop: a thrown cycle does not stop the loop; cadence resets after success', async () => {
+	// OS already up to date → the successful cycles do no internal delaying,
+	// so every recorded sleep comes from the loop runner itself.
+	const h = makeHarness({
+		osVersion: '5.1.36',
+		recommended: '5.1.36',
+		osVersions: [],
+	});
+	let n = 0;
+	setLogin(h, async () => {
+		n += 1;
+		if (n === 1 || n === 4) {
+			throw new Error('transient');
+		}
+	});
+	const sleeps: number[] = [];
+	const recordDelay = async (v: string | number): Promise<void> => {
+		sleeps.push(typeof v === 'number' ? v : -1);
+	};
+	const cont = (): boolean => sleeps.length < 4;
+	const svc = createService(h.sdk, config(), recordDelay, cont);
+
+	await svc.main();
+
+	// err(1m) → ok(1d) → ok(1d) → err(1m, NOT 8m): backoff reset by successes.
+	assert.deepEqual(sleeps, [60_000, 86_400_000, 86_400_000, 60_000]);
+	assert.deepEqual(h.osUpdates, []);
+});
+
+test('runLoop: error backoff doubles then caps at the check interval', async () => {
+	const h = makeHarness();
+	setLogin(h, async () => {
+		throw new Error('down');
+	});
+	const sleeps: number[] = [];
+	const recordDelay = async (v: string | number): Promise<void> => {
+		sleeps.push(typeof v === 'number' ? v : -1);
+	};
+	const cont = (): boolean => sleeps.length < 4;
+	// 2m interval so the cap is observable: 1m → 2m → (2m cap) → (2m cap).
+	const svc = createService(
+		h.sdk,
+		config({ checkInterval: '2m' }),
+		recordDelay,
+		cont,
+	);
+
+	await svc.main();
+
+	assert.deepEqual(sleeps, [60_000, 120_000, 120_000, 120_000]);
 });

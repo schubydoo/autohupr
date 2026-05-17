@@ -31,7 +31,7 @@ export interface ServiceConfig {
 	supervisorTargetVersion: string;
 }
 
-export type DelayFn = (value: StringValue) => Promise<void>;
+export type DelayFn = (value: StringValue | number) => Promise<void>;
 
 export interface OsUpdateVersions {
 	versions: string[];
@@ -112,6 +112,7 @@ const getExpandedProp = <T extends object, K extends keyof T>(
 
 const SUPERVISOR_CONVERGE_MAX_POLLS = 30;
 const SUPERVISOR_GATE_POLL = '5s' as StringValue;
+const ERROR_BACKOFF_START_MS = 60_000;
 
 /**
  * Build the update service. `sdk` and `delayFn` are injected so the loops can
@@ -134,19 +135,44 @@ export const createService = (
 		HupStatus.DEVICE_BUSY,
 	];
 
-	const getDeviceType = async (uuid: string): Promise<string> => {
+	interface DeviceInfo {
+		supervisorVersion: string | undefined;
+		deviceTypeSlug: string;
+		arch: string | undefined;
+		osVersion: string;
+	}
+
+	// One round-trip for supervisor version + OS version + device-type slug +
+	// CPU arch slug, via a single nested $expand — replaces four separate
+	// device.get calls per tick.
+	const getDeviceInfo = async (uuid: string): Promise<DeviceInfo> => {
 		const device = await sdk.models.device.get(uuid, {
-			$expand: { is_of__device_type: { $select: 'slug' } },
+			$select: ['supervisor_version', 'os_version', 'os_variant'],
+			$expand: {
+				is_of__device_type: {
+					$select: 'slug',
+					$expand: { is_of__cpu_architecture: { $select: 'slug' } },
+				},
+			},
 		});
-		return getExpandedProp(
+		const deviceTypeSlug = getExpandedProp(
 			device.is_of__device_type as Array<{ slug: string }>,
 			'slug',
 		)!;
-	};
-
-	const getDeviceVersion = async (uuid: string): Promise<string> => {
-		const device = await sdk.models.device.get(uuid);
-		return sdk.models.device.getOsVersion(device);
+		const archExpanded = getExpandedProp(
+			device.is_of__device_type as Array<{
+				is_of__cpu_architecture: Array<{ slug: string }>;
+			}>,
+			'is_of__cpu_architecture',
+		);
+		return {
+			supervisorVersion: device.supervisor_version ?? undefined,
+			deviceTypeSlug,
+			arch: getExpandedProp(archExpanded, 'slug'),
+			osVersion: sdk.models.device.getOsVersion(
+				device as Parameters<typeof sdk.models.device.getOsVersion>[0],
+			),
+		};
 	};
 
 	const getOsUpdateVersions = async (
@@ -163,26 +189,9 @@ export const createService = (
 		};
 	};
 
-	const getCpuArchSlug = async (uuid: string): Promise<string | undefined> => {
-		const device = await sdk.models.device.get(uuid, {
-			$expand: {
-				is_of__device_type: {
-					$select: 'slug',
-					$expand: { is_of__cpu_architecture: { $select: 'slug' } },
-				},
-			},
-		});
-		const arch = getExpandedProp(
-			device.is_of__device_type as Array<{
-				is_of__cpu_architecture: Array<{ slug: string }>;
-			}>,
-			'is_of__cpu_architecture',
-		);
-		return getExpandedProp(arch, 'slug');
-	};
-
-	const getSupervisorReleases = async (uuid: string): Promise<string[]> => {
-		const arch = await getCpuArchSlug(uuid);
+	const getSupervisorReleases = async (
+		arch: string | undefined,
+	): Promise<string[]> => {
 		if (!arch) {
 			return [];
 		}
@@ -256,34 +265,27 @@ export const createService = (
 	};
 
 	const runSupervisorCycle = async (): Promise<void> => {
-		try {
-			await sdk.auth.loginWithToken(apiKey);
-			await waitUntilOnline(' (supervisor loop)');
+		await sdk.auth.loginWithToken(apiKey);
+		await waitUntilOnline(' (supervisor loop)');
 
-			const current = await getCurrentSupervisor(deviceUuid);
-			const releases = await getSupervisorReleases(deviceUuid);
-			const target = selectSupervisorTarget(
-				config.supervisorTargetVersion,
-				releases,
-			);
-
-			if (target && target !== current) {
-				console.log(`Pinning supervisor: ${current} -> ${target}`);
-				await sdk.models.device.pinToSupervisorRelease(deviceUuid, target);
-				await awaitConvergence(target);
-			} else {
-				console.log(
-					`Supervisor up to date at ${current} (target ${target ?? 'unknown'}).`,
-				);
-				supervisorConverged = true;
-			}
-		} catch (e) {
-			console.error(`Supervisor loop error: ${e}`);
-		}
-		console.log(
-			`Will check supervisor again in ${config.supervisorCheckInterval}...`,
+		const { supervisorVersion: current, arch } =
+			await getDeviceInfo(deviceUuid);
+		const releases = await getSupervisorReleases(arch);
+		const target = selectSupervisorTarget(
+			config.supervisorTargetVersion,
+			releases,
 		);
-		await delayFn(config.supervisorCheckInterval);
+
+		if (target && target !== current) {
+			console.log(`Pinning supervisor: ${current} -> ${target}`);
+			await sdk.models.device.pinToSupervisorRelease(deviceUuid, target);
+			await awaitConvergence(target);
+		} else {
+			console.log(
+				`Supervisor up to date at ${current} (target ${target ?? 'unknown'}).`,
+			);
+			supervisorConverged = true;
+		}
 	};
 
 	const runMainCycle = async (): Promise<void> => {
@@ -310,14 +312,13 @@ export const createService = (
 			}
 		}
 
-		const deviceType = await getDeviceType(deviceUuid);
-		const deviceVersion = await getDeviceVersion(deviceUuid);
-		console.log(`Getting releases for ${deviceType} at ${deviceVersion}...`);
+		const { deviceTypeSlug, osVersion } = await getDeviceInfo(deviceUuid);
+		console.log(`Getting releases for ${deviceTypeSlug} at ${osVersion}...`);
 
 		const decision = selectOsTarget(
 			config.userTargetVersion,
-			await getOsUpdateVersions(deviceType, deviceVersion),
-			deviceVersion,
+			await getOsUpdateVersions(deviceTypeSlug, osVersion),
+			osVersion,
 		);
 
 		if (decision.action === 'skip') {
@@ -343,24 +344,51 @@ export const createService = (
 					console.error(e);
 				});
 		}
-
-		console.log(`Will try again in ${config.checkInterval}...`);
-		await delayFn(config.checkInterval);
 	};
 
-	const main = async (): Promise<void> => {
+	// Resilient loop runner: a thrown cycle (a transient API/network blip) must
+	// not kill the loop. On error, retry with exponential backoff starting at
+	// ERROR_BACKOFF_START_MS, doubling each consecutive failure, capped at the
+	// configured check interval; reset to the configured cadence after any
+	// successful cycle.
+	//
+	// The backoff loop and the single-call $expand device fetch are adapted
+	// from Teko012's supervisor-update.cjs sidecar:
+	// https://github.com/ketilmo/balena-ads-b/blob/master/autohupr/supervisor-update.cjs
+	const runLoop = async (
+		cycle: () => Promise<void>,
+		intervalMs: number,
+		label: string,
+	): Promise<void> => {
+		let backoffMs = ERROR_BACKOFF_START_MS;
 		while (shouldContinue()) {
-			await runMainCycle();
+			try {
+				await cycle();
+				backoffMs = ERROR_BACKOFF_START_MS;
+				console.log(`Will check ${label} again in ${ms(intervalMs)}.`);
+				await delayFn(intervalMs);
+			} catch (e) {
+				const sleepMs = Math.min(backoffMs, intervalMs);
+				console.error(`${label} loop error: ${e}`);
+				console.log(`Will retry ${label} in ${ms(sleepMs)} after error.`);
+				await delayFn(sleepMs);
+				backoffMs = Math.min(backoffMs * 2, intervalMs);
+			}
 		}
 	};
+
+	const main = (): Promise<void> =>
+		runLoop(runMainCycle, ms(config.checkInterval), 'OS HUP');
 
 	const supervisorLoop = async (): Promise<void> => {
 		if (!supervisorManaged) {
 			return;
 		}
-		while (shouldContinue()) {
-			await runSupervisorCycle();
-		}
+		await runLoop(
+			runSupervisorCycle,
+			ms(config.supervisorCheckInterval),
+			'supervisor',
+		);
 	};
 
 	return {
@@ -375,7 +403,7 @@ export const createService = (
 
 const delay: DelayFn = (value) =>
 	new Promise<void>((resolve) => {
-		setTimeout(resolve, ms(value));
+		setTimeout(resolve, typeof value === 'number' ? value : ms(value));
 	});
 
 const bootstrap = (): void => {
