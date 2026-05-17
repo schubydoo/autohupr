@@ -41,4 +41,13 @@ COPY --chown=app:app package.json ./
 COPY --chown=app:app start.sh ./
 RUN chmod +x ./start.sh
 USER app
+# Healthy while the worker runs (build/main.js), or while parking — start.sh is
+# still alive requesting/awaiting the supervisor stop, or holding on tail. The
+# `[x]` patterns stop pgrep -f matching the healthcheck's own shell. balenaOS
+# ignores this for restarts; it is for scanner compliance and `docker ps`.
+HEALTHCHECK --interval=5m --timeout=10s --start-period=30s --retries=3 \
+  CMD pgrep -f '[b]uild/main.js' >/dev/null 2>&1 \
+   || pgrep -f '[s]tart.sh' >/dev/null 2>&1 \
+   || pgrep -f '[t]ail -f /dev/null' >/dev/null 2>&1 \
+   || exit 1
 ENTRYPOINT ["/sbin/tini", "--", "/usr/src/app/start.sh"]
