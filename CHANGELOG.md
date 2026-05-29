@@ -1,5 +1,20 @@
 # Change Log
 
+# v0.5.8
+## (2026-05-29)
+
+* fix: skip unsatisfiable supervisor downgrades
+* chore(deps): lock file maintenance
+* chore(deps): update docker actions
+* chore(deps): update github/codeql-action digest to 7211b7c
+* Consolidate balena deploy matrix into one job (#46)
+* Tie URLs to commits (#45)
+* Use official upload-balena-release-asset; slim note script
+* Clarify supervisor latest/recommended is newest-available, not balena-recommended
+* Automate balenaHub release notes; tidy changelog; add TruffleHog
+* Add isolated write-note / write-asset spike modes
+* Add throwaway release-notes spike (workflow_dispatch)
+
 # v0.5.7
 ## (2026-05-17)
 
