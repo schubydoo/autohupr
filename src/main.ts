@@ -119,6 +119,29 @@ const getExpandedProp = <T extends object, K extends keyof T>(
 const sameVersion = (a: string | undefined, b: string | undefined): boolean =>
 	a != null && b != null && versionsEqual(a, b);
 
+/**
+ * Is the resolved supervisor `target` strictly lower than the running
+ * `current`? balena forbids supervisor downgrades, so a target below current —
+ * e.g. the pinned release was withdrawn upstream, leaving only older entries in
+ * the arch's release list — can never converge; attempting the pin throws into
+ * the retry backoff forever. Returns false (preserving the attempt-the-pin
+ * path) when `current` is undefined or unparseable, so a missing/odd report
+ * never crashes or spuriously blocks a legitimate update.
+ */
+const isSupervisorDowngrade = (
+	target: string,
+	current: string | undefined,
+): boolean => {
+	if (current == null) {
+		return false;
+	}
+	const parsedCurrent = parseVersion(current);
+	if (parsedCurrent.core.length === 0) {
+		return false;
+	}
+	return compareParsed(parseVersion(target), parsedCurrent) < 0;
+};
+
 const SUPERVISOR_CONVERGE_MAX_POLLS = 30;
 const SUPERVISOR_GATE_POLL = '5s' as StringValue;
 const ERROR_BACKOFF_START_MS = 60_000;
@@ -285,7 +308,20 @@ export const createService = (
 			releases,
 		);
 
-		if (target && !sameVersion(target, current)) {
+		if (
+			target &&
+			!sameVersion(target, current) &&
+			isSupervisorDowngrade(target, current)
+		) {
+			// Withdrawn-release case: the resolved target is below the running
+			// version. balena rejects the pin (downgrades are not allowed), so
+			// attempting it would only throw into the error backoff every cycle.
+			// Skip with a single normal-cadence log and let the OS loop proceed.
+			console.log(
+				`Supervisor target ${target} is below current ${current} (release likely withdrawn upstream); skipping to avoid an impossible downgrade.`,
+			);
+			supervisorConverged = true;
+		} else if (target && !sameVersion(target, current)) {
 			console.log(`Pinning supervisor: ${current} -> ${target}`);
 			await sdk.models.device.pinToSupervisorRelease(deviceUuid, target);
 			await awaitConvergence(target);

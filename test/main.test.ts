@@ -260,6 +260,56 @@ test('convergence cap forces progress so OS is not blocked forever', async () =>
 	assert.equal(svc.getState().supervisorConverged, true);
 });
 
+test('withdrawn upstream release: target below current → no pin, skip log, converged', async () => {
+	// Real incident: device is running 18.0.0 (pinned before balena yanked it),
+	// but the arch release list now tops out at 17.8.5. `latest` resolves to
+	// 17.8.5, a downgrade balena forbids. Must skip — not pin into the retry
+	// backoff forever.
+	const h = makeHarness({
+		supervisor: '18.0.0',
+		supervisorReleases: ['17.8.5', '17.8.4'],
+	});
+	const svc = createService(
+		h.sdk,
+		config({ supervisorTargetVersion: 'latest', userTargetVersion: '5' }),
+		immediate,
+	);
+	const logs: string[] = [];
+	const origLog = console.log;
+	console.log = (msg?: unknown): void => {
+		logs.push(String(msg));
+	};
+	try {
+		await svc.runSupervisorCycle();
+	} finally {
+		console.log = origLog;
+	}
+	assert.deepEqual(h.pin, []);
+	assert.equal(svc.getState().supervisorConverged, true);
+	assert.ok(
+		logs.some((l) => /below current 18\.0\.0/.test(l) && /skipping/.test(l)),
+		`expected a downgrade-skip log, got: ${logs.join(' | ')}`,
+	);
+});
+
+test('concrete family pin below current is also skipped as a downgrade', async () => {
+	// Same guard applies regardless of how the target was selected: a concrete
+	// `17` family pin resolving below the running 18.0.0 is still an impossible
+	// downgrade.
+	const h = makeHarness({
+		supervisor: '18.0.0',
+		supervisorReleases: ['17.8.5', '17.8.4'],
+	});
+	const svc = createService(
+		h.sdk,
+		config({ supervisorTargetVersion: '17', userTargetVersion: '5' }),
+		immediate,
+	);
+	await svc.runSupervisorCycle();
+	assert.deepEqual(h.pin, []);
+	assert.equal(svc.getState().supervisorConverged, true);
+});
+
 // --- resilient loop runner --------------------------------------------------
 
 const setLogin = (h: Harness, fn: () => Promise<void>): void => {
