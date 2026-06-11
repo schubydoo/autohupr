@@ -1,4 +1,4 @@
-ARG ALPINE_VERSION=3.23
+ARG ALPINE_VERSION=3.24
 
 # renovate: alpine-package=nodejs
 ARG NODEJS_VERSION=24.14.1-r0
