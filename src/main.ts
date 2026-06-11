@@ -469,7 +469,12 @@ const bootstrap = (): void => {
 		process.exit(1);
 	}
 
-	const sdk = getSdk({ apiUrl, dataDirectory: '/tmp/work' });
+	// dataDirectory: false keeps the session token in memory instead of writing
+	// it to disk. We re-authenticate from BALENA_API_KEY every cycle, so on-disk
+	// persistence buys nothing — and it avoids the EACCES we hit when a runc
+	// security update (balenaOS v7.x) changed the default tmpfs mode from 1777 to
+	// 0755, which stopped the non-root `app` user from writing into /tmp/work.
+	const sdk = getSdk({ apiUrl, dataDirectory: false });
 	const config: ServiceConfig = {
 		apiKey,
 		deviceUuid,
