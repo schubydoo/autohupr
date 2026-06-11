@@ -17,8 +17,6 @@ balenaCloud's builder pulls the right one for each device.
 services:
   autohupr:
     image: bh.cr/schubydoo/autohupr           # or bh.cr/schubydoo/autohupr/<version>
-    tmpfs:
-      - /tmp/work
     labels:
       io.balena.features.balena-api: 1
       io.balena.features.supervisor-api: 1
