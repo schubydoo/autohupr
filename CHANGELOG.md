@@ -1,5 +1,20 @@
 # Change Log
 
+# v0.5.9
+## (2026-06-11)
+
+* fix: store balena session token in memory, drop /tmp/work tmpfs
+* chore(deps): lock file maintenance
+* chore(deps): update dependency @types/node to v24.13.2
+* chore(deps): update trufflesecurity/trufflehog action to v3.95.5
+* chore(deps): update github actions to v6.0.3
+* chore(deps): update balena packages
+* Bump Alpine, Node, npm, curl versions
+* chore(deps): update security actions to 8aad20d
+* chore(deps): lock file maintenance
+* chore(deps): update balena-io/deploy-to-balena-action action to v2.2.10
+* chore(deps): update docker/setup-qemu-action digest to 0611638
+
 # v0.5.8
 ## (2026-05-29)
 
