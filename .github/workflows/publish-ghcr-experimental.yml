@@ -1,0 +1,86 @@
+name: Publish experimental image to GHCR
+
+# Manual-only. Builds the selected branch/ref into a single, throwaway GHCR tag
+# for pre-release testing on a device — deliberately isolated from the release
+# path: it does NOT touch `latest` or the `{{major}}.{{minor}}` tag, does NOT
+# cosign-sign, generate an SBOM, cut a GitHub Release, or publish to balenaHub.
+# Pick the feature branch in the "Use workflow from" ref dropdown to build its
+# code. NOTE: this button only appears once the workflow exists on the default
+# branch (master) — see the PR notes.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Experimental GHCR tag (e.g. exp-jitless). Not latest / not a release version.'
+        required: true
+        default: 'exp-jitless'
+
+permissions:
+  contents: read
+
+concurrency:
+  # One in-flight build per experimental tag; a newer dispatch supersedes it.
+  group: exp-ghcr-${{ inputs.tag }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write # push image to GHCR
+    steps:
+      - name: Guard the tag (must not collide with release / latest tags)
+        run: |
+          set -eu
+          TAG='${{ inputs.tag }}'
+          if printf '%s' "$TAG" | grep -qiE '^(latest|v?[0-9]+\.[0-9]+)'; then
+            echo "::error::Refusing tag '$TAG': it looks like a release or 'latest' tag. Use an experimental name such as exp-jitless." >&2
+            exit 1
+          fi
+          if ! printf '%s' "$TAG" | grep -qE '^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$'; then
+            echo "::error::Invalid tag '$TAG'. Allowed: [A-Za-z0-9._-], 1-63 chars, starting alphanumeric." >&2
+            exit 1
+          fi
+          echo "Tag OK: $TAG"
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push the experimental tag
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          file: ./Dockerfile.template
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          # Single explicit tag only — no metadata-action, so nothing can move
+          # `latest` or a versioned tag.
+          tags: ghcr.io/${{ github.repository }}:${{ inputs.tag }}
+          # Keep experimental builds lean: no provenance/SBOM attestations
+          # (those are for signed releases via publish-ghcr.yml).
+          provenance: false
+          sbom: false
+
+      - name: Summary
+        run: |
+          {
+            echo "### Experimental image published"
+            echo ""
+            echo "Pullable reference (multi-arch: amd64, arm64, armv7):"
+            echo ""
+            echo '```'
+            echo "ghcr.io/${{ github.repository }}:${{ inputs.tag }}"
+            echo '```'
+            echo ""
+            echo "Built from ref: \`${{ github.ref_name }}\` @ \`${{ github.sha }}\`"
+            echo ""
+            echo "_Not signed, no SBOM, not on balenaHub, \`latest\` untouched._"
+          } >> "$GITHUB_STEP_SUMMARY"

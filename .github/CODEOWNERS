@@ -1,1 +1,6 @@
 * @schubydoo
+
+# Renovate-managed paths — no code owner, so dependency PRs don't auto-request review.
+/package-lock.json
+/Dockerfile.template
+/.github/workflows/
