@@ -81,4 +81,19 @@ if [ -n "${SUPERVISOR_CHECK_INTERVAL:-}" ]; then
 	validate_interval SUPERVISOR_CHECK_INTERVAL "$SUPERVISOR_CHECK_INTERVAL"
 fi
 
-exec node ./build/main.js
+# Memory tuning for low-RAM SBCs (the target is a Pi 3, 1 GB). This is an idle,
+# network-bound watcher that wakes ~once a day to make a handful of API calls,
+# so the V8 JIT is pure baseline RSS with no throughput benefit on this
+# workload: --jitless drops the optimizing compiler + code cache and is the
+# single biggest lever (~20% / ~10-12 MB RSS, measured on Node 24). Steady-state
+# heapUsed is only ~7 MB, so --max-old-space-size is a runaway/leak safety cap,
+# not an RSS reducer. The flags live on the CLI (not a Dockerfile ENV
+# NODE_OPTIONS) for two reasons: --optimize-for-size is rejected inside
+# NODE_OPTIONS, and a downstream NODE_OPTIONS env var would override an image
+# ENV and could silently drop --jitless — CLI flags cannot be clobbered.
+exec node \
+	--jitless \
+	--optimize-for-size \
+	--max-semi-space-size=2 \
+	--max-old-space-size=48 \
+	./build/main.js

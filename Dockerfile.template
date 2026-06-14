@@ -35,6 +35,13 @@ RUN apk add --no-cache \
       "curl=${CURL_VERSION}" \
     && addgroup -S app && adduser -S app -G app
 WORKDIR /usr/src/app
+# Cap the libuv thread pool at 2 (default 4). This app issues only occasional,
+# serialized API calls, so 4 worker threads are unused stacks; on the device the
+# pool spawns lazily during a cycle and pushed the thread count to ~11. Set as a
+# default ENV so every consumer of the image benefits; a downstream env var can
+# still override it. (The V8 size flags live on the node CLI in start.sh — see
+# the comment there for why they cannot live in NODE_OPTIONS.)
+ENV UV_THREADPOOL_SIZE=2
 COPY --chown=app:app --from=builder /usr/src/app/node_modules ./node_modules
 COPY --chown=app:app --from=builder /usr/src/app/build ./build
 COPY --chown=app:app package.json ./
