@@ -1,5 +1,14 @@
 # Change Log
 
+# v0.5.10
+## (2026-06-14)
+
+* fix: make balena-sdk work under --jitless via node-fetch preload
+* perf: cut steady-state RSS ~20% with jitless + V8 size flags
+* ci: add manual experimental GHCR publish workflow
+* chore: stop Renovate PRs auto-requesting code-owner review
+* chore: allowlist install scripts ahead of npm v12 (allowScripts)
+
 # v0.5.9
 ## (2026-06-11)
 
