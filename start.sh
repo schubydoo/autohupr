@@ -91,9 +91,15 @@ fi
 # NODE_OPTIONS) for two reasons: --optimize-for-size is rejected inside
 # NODE_OPTIONS, and a downstream NODE_OPTIONS env var would override an image
 # ENV and could silently drop --jitless — CLI flags cannot be clobbered.
+#
+# --require ./build/fetch-shim.js is mandatory whenever --jitless is set:
+# --jitless disables WebAssembly, which kills Node's global fetch (undici parses
+# HTTP via a WASM build of llhttp). The shim swaps global fetch for node-fetch
+# (native node:https, no WASM) before balena-sdk loads. See src/fetch-shim.ts.
 exec node \
 	--jitless \
 	--optimize-for-size \
 	--max-semi-space-size=2 \
 	--max-old-space-size=48 \
+	--require ./build/fetch-shim.js \
 	./build/main.js
