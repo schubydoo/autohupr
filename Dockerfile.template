@@ -1,7 +1,7 @@
 ARG ALPINE_VERSION=3.24
 
 # renovate: alpine-package=nodejs
-ARG NODEJS_VERSION=24.16.0-r0
+ARG NODEJS_VERSION=24.17.0-r0
 # renovate: alpine-package=npm
 ARG NPM_VERSION=11.12.1-r0
 # renovate: alpine-package=tini
