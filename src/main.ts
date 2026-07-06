@@ -39,8 +39,7 @@ export interface OsUpdateVersions {
 }
 
 export type OsDecision =
-	| { action: 'update'; version: string }
-	| { action: 'skip'; reason: string };
+	{ action: 'update'; version: string } | { action: 'skip'; reason: string };
 
 /**
  * Pure: decide the OS target. `latest`/`recommended` use the API's recommended

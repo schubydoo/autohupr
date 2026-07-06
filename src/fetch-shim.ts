@@ -17,7 +17,7 @@
  * Native crypto (OpenSSL), TLS and JSON are unaffected by `--jitless`, so once
  * HTTP is off undici the whole hot path is WASM-free.
  */
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nodeFetch = require('node-fetch');
 
 const g = globalThis as unknown as Record<string, unknown>;
