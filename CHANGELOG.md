@@ -1,5 +1,34 @@
 # Change Log
 
+# v0.5.11
+## (2026-07-16)
+
+* fix(deps): pin the image explicitly and ship pending runtime security patches (#93)
+* ci(trivy): scan the built image, not just the filesystem (#92)
+* chore(renovate): gate alpine minors, automerge apk pins (#91)
+* chore(renovate): restrict typescript to v6 (#90)
+* chore(deps): lock file maintenance (#89)
+* chore(deps): update trufflesecurity/trufflehog action to v3.95.9 (#86)
+* chore(deps): update actions/setup-node action to v7 (#87)
+* chore(deps): update dependency @types/node to v24.13.3 (#85)
+* chore(deps): update actions/setup-node digest to 2499707 (#82)
+* chore(deps): update security actions (#83)
+* chore(deps): update dependency @balena/lint to v9.4.6 (#84)
+* Update packageNameTemplate for Alpine version (#81)
+* style: reformat OsDecision union for prettier 3.9
+* chore(deps): lock file maintenance
+* chore(deps): update dependency balena-sdk to v23.2.12
+* chore(deps): update docker actions
+* chore(deps): update github/codeql-action digest to 54f647b
+* chore(deps): update trufflesecurity/trufflehog action to v3.95.8
+* Update Node.js and cURL versions in Dockerfile.template
+* chore(deps): lock file maintenance
+* chore(deps): update github actions
+* chore(deps): update balena packages
+* chore(deps): update trufflesecurity/trufflehog action to v3.95.6
+* chore(deps): update security actions
+* chore(deps): update dependency @balena/lint to v9.4.5
+
 # v0.5.10
 ## (2026-06-14)
 
