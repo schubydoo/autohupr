@@ -55,6 +55,12 @@
       "groupName": "security actions"
     },
     {
+      "description": "Hold TypeScript on v6 until @balena/lint (typescript-eslint) supports v7",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7.0.0"
+    },
+    {
       "description": "Limit alpine base image lookups to semver versions (suppresses date-snapshot tag noise)",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["alpine"],
