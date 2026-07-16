@@ -73,7 +73,7 @@
       ],
       "datasourceTemplate": "repology",
       "versioningTemplate": "loose",
-      "packageNameTemplate": "alpine_3_23/{{depName}}"
+      "packageNameTemplate": "alpine_3_24/{{depName}}"
     }
   ]
 }
