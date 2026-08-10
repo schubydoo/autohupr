@@ -1,5 +1,32 @@
 # Change Log
 
+# v0.5.12
+## (2026-08-10)
+
+* chore(release): cut a patch release to refresh the published image (#116)
+* chore(deps): lock file maintenance (#115)
+* chore(ci): update github/codeql-action action to v4.37.6 (#114)
+* chore(ci): update github/codeql-action action to v4.37.5 (#113)
+* chore(deps): lock file maintenance (#112)
+* chore(deps): lock file maintenance (#111)
+* chore(deps): bump brace-expansion off CVE-2026-14257 (#110)
+* chore(deps): update dependency balena-sdk to v23.2.14 (#109)
+* chore(deps): update dependency nodejs to v24.18.1-r0 (#108)
+* chore(ci): update docker/login-action action to v4.6.0 (#107)
+* chore(ci): update docker/login-action action to v4.5.2 (#106)
+* chore(deps): lock file maintenance (#105)
+* chore(deps): lock file maintenance (#104)
+* chore(ci): update github-actions (#103)
+* chore(ci): update github-actions (#102)
+* chore(deps): lock file maintenance (#101)
+* chore(ci): update github/codeql-action action to v4.37.3 (#100)
+* chore(deps): pin dependencies (#98)
+* chore(ci): update github-actions (#99)
+* chore(deps): lock file maintenance (#96)
+* chore: centralize Renovate config via shared preset (#97)
+* chore(deps): lock file maintenance (#95)
+* chore(deps): update github/codeql-action digest to 7188fc3 (#94)
+
 # v0.5.11
 ## (2026-07-16)
 
