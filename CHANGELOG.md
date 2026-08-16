@@ -1,5 +1,13 @@
 # Change Log
 
+# v0.5.13
+## (2026-08-16)
+
+* build(docker): float the Alpine apk revision with a fuzzy version pin (#120)
+* chore(deps): update dependency balena-sdk to v23.2.15 (#119)
+* chore(ci): update trufflesecurity/trufflehog action to v3.97.0 (#118)
+* chore(ci): update github/codeql-action action to v4.37.7 (#117)
+
 # v0.5.12
 ## (2026-08-10)
 
