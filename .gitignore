@@ -2,3 +2,9 @@ node_modules/
 build/
 build-test/
 *.js
+
+# Local agent tooling (host-specific; not committed)
+/.claude/
+/.worktreeinclude
+/CLAUDE.local.md
+/scratch/
