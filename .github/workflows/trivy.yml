@@ -7,6 +7,10 @@ on:
     branches: [master]
   schedule:
     - cron: '31 5 * * 1'
+  # Cutting a release fixes the published image immediately, but the alerts it
+  # closes stay open until the next Monday. Allow a manual rerun so a release
+  # can clear them the same day.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -82,7 +86,7 @@ jobs:
   # a notification instead of going unnoticed.
   published:
     name: Trivy published image scan
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
