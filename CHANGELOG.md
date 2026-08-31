@@ -1,5 +1,27 @@
 # Change Log
 
+# v0.5.14
+## (2026-08-31)
+
+* chore(release): cut a patch release to ship the libssl3 fix (#138)
+* chore(deps): lock file maintenance (#137)
+* chore(deps): lock file maintenance (#136)
+* chore(ci): update softprops/action-gh-release action to v3.0.3 (#135)
+* chore(ci): update anchore/sbom-action action to v0.24.2 (#133)
+* chore(deps): update dependency @balena/lint to v9.4.8 (#134)
+* docs: add AGENTS.md agent guide (#132)
+* chore: normalize gitignore (#131)
+* chore(ci): update anchore/sbom-action action to v0.24.1 (#130)
+* chore(ci): update github/codeql-action action to v4.37.9 (#129)
+* chore(deps): update alpine packages to v3.5.8-r0 (#128)
+* chore(ci): update trufflesecurity/trufflehog action to v3.97.1 (#127)
+* chore(deps): lock file maintenance (#126)
+* chore(deps): lock file maintenance (#125)
+* chore(ci): update github/codeql-action action to v4.37.8 (#124)
+* chore(ci): update docker/setup-buildx-action action to v4.3.0 (#123)
+* chore(ci): update balena-io/upload-balena-release-asset action to v0.2.0 (#122)
+* chore(deps): lock file maintenance (#121)
+
 # v0.5.13
 ## (2026-08-16)
 
