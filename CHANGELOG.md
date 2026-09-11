@@ -1,5 +1,17 @@
 # Change Log
 
+# v0.5.15
+## (2026-09-11)
+
+* fix(docker): float the curl apk pin so a -rN rebuild installs (#146)
+* chore(ci): update github/codeql-action action to v4.38.0 (#145)
+* chore(deps): lock file maintenance (#144)
+* chore(ci): update trufflesecurity/trufflehog action to v3.97.4 (#143)
+* chore(ci): update trufflesecurity/trufflehog action to v3.97.2 (#142)
+* chore(deps): update dependency curl to v8.22.0-r0 (#141)
+* chore(ci): update docker/setup-qemu-action action to v4.3.0 (#140)
+* ci(trivy): allow the published-image scan to be triggered manually (#139)
+
 # v0.5.14
 ## (2026-08-31)
 
