@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # Skip the workflow's own release commits (avoid loops). Release commits
     # have subject "vX.Y.Z".
     if: "!startsWith(github.event.head_commit.message, 'v')"
