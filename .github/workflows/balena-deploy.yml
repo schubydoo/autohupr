@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # Only run on PRs from the same repo. Fork PRs are skipped here for
     # secret safety; the GitHub "Require approval for outside collaborators"
     # setting is the gate for those.
