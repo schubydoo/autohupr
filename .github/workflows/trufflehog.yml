@@ -21,6 +21,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # full history so scheduled runs scan all commits
-      - uses: trufflesecurity/trufflehog@0186870afd2c4a90def791d80260923ba583d076 # v3.98.0
+      - uses: trufflesecurity/trufflehog@4c282f54c0160102ccbebba421b89f3c3af6404d # v3.98.1
         with:
           extra_args: --only-verified
