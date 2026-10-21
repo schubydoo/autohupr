@@ -22,7 +22,7 @@ ARG CURL_VERSION=8.22.0
 # does; pinned, Renovate updates them on their own cadence. These carry most of
 # the CVE traffic, so the explicit pins are the point.
 # renovate: alpine-package=c-ares
-ARG CARES_VERSION=1.34.8
+ARG CARES_VERSION=1.34.9-r0
 
 # Already installed in the base image, and `apk add` leaves an installed package
 # alone while it satisfies the pin. So these keep their `-rN` and install as a
