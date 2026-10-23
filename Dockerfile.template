@@ -9,7 +9,7 @@ ARG ALPINE_VERSION=3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b8
 # repology, which reports the full `-rN` version -- so a Renovate bump writes the
 # revision back (e.g. `8.22.0-r0`). Strip it again, or the pin stops floating.
 # renovate: alpine-package=nodejs
-ARG NODEJS_VERSION=24.18.1
+ARG NODEJS_VERSION=24.22.1-r0
 # renovate: alpine-package=npm
 ARG NPM_VERSION=11.12.1
 # renovate: alpine-package=tini
