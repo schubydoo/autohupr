@@ -1,7 +1,7 @@
 # Full patch version, not the rolling `3.24` tag: Renovate preserves docker tag
 # precision, so a 3-part pin gets a PR for 3.24.2 while `3.24` would silently
 # resolve to whatever is current at build time.
-ARG ALPINE_VERSION=3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+ARG ALPINE_VERSION=3.24.4@sha256:93b41ef40b1677fce8fcc64ff4af09daddfacf5040afde618bc46c1e2d1cc7d4
 
 # apk packages are pinned to their PATCH version (no `-rN`) and installed with the
 # fuzzy operator (`=~`), so any Alpine package revision of that version installs --
