@@ -1,0 +1,16 @@
+# OSV-Scanner configuration for package-lock.json in this directory.
+# OpenSSF Scorecard reads this file for its Vulnerabilities check.
+# Each ignore needs a reason and an expiry date. When the date passes, the
+# finding comes back, and you decide again.
+
+[[IgnoredVulns]]
+# minimatch 10.2.6 and 7.4.9, pulled in only by lint tooling: eslint,
+# @eslint/config-array, @typescript-eslint/typescript-estree (10.2.6) and
+# depcheck (7.4.9). Their latest releases still require minimatch ^10 or ^7,
+# and the fix is only in 11.0.1. Dependabot alert 13 is dismissed with the
+# same reason.
+id = "CVE-2026-118764" # also GHSA-g3hv-75wg-m249
+# ignoreUntil, not effectiveUntil: OSV-Scanner reads only this field for a
+# vulnerability ignore.
+ignoreUntil = 2027-02-09
+reason = "Unreachable here. The bug needs optimizationLevel >= 2, and no caller sets it (default 1), checked in eslint 10.14.0, @eslint/config-array 0.23.5, @typescript-eslint/typescript-estree 8.72.1 and depcheck 1.4.7. The patterns come only from this repo's own lint configuration. Dev tooling only, nothing ships."
