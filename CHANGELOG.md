@@ -1,5 +1,32 @@
 # Change Log
 
+# v0.5.18
+## (2026-11-12)
+
+* chore(release): sync the version files to v0.5.17 (#227)
+* chore(release): publish the zlib 1.4-r0 fix (#226)
+* chore(deps): update dependency nodejs to v24.22.3-r0 (#225)
+* chore(deps): lock file maintenance (#224)
+* chore(deps): update dependency balena-sdk to v23.2.20 (#223)
+* chore(deps): update alpine:3.24.4 docker digest to f59abe6 (#222)
+* chore(deps): update dependency balena-sdk to v23.2.18 (#220)
+* chore(deps): update npm (non-major) (#221)
+* docs(docker): describe the -rN pins and install operators as they are (#219)
+* chore(deps): update dependency zlib to v1.4-r0 (#218)
+* chore(deps): update dependency @balena/lint to v11.0.1 (#216)
+* chore(deps): update alpine docker tag to v3.24.4 (#215)
+* chore(ci): update github-actions (#217)
+* chore(ci): update github-actions (#214)
+* chore(ci): update github/codeql-action action to v4.39.2 (#213)
+* chore(ci): update trufflesecurity/trufflehog action to v3.99.8 (#212)
+* chore(deps): lock file maintenance (#211)
+* chore(deps): update dependency @types/node to v26.6.6 (#210)
+* chore(deps): update dependency @balena/lint to v11 (#209)
+* chore(deps): update dependency nodejs to v24.22.1-r1 (#208)
+* chore(deps): update dependency @balena/lint to v9.4.15 (#206)
+* chore(deps): update node.js to v26 (#205)
+* chore(deps): update dependency @balena/lint to v9.4.12 (#204)
+
 # v0.5.16
 ## (2026-10-09)
 
