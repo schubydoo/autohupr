@@ -1,5 +1,27 @@
 # Change Log
 
+## 0.5.19 (2026-11-25)
+
+### Other changes
+
+#### Commits since v0.5.18
+
+- ci(release): cut releases from a knope release PR (#243)
+- chore(ci): update github-actions (#242)
+- chore(ci): update github-actions (#240)
+- chore(deps): update dependency @balena/lint to v11.1.1 (#241)
+- chore(deps): lock file maintenance (#239)
+- chore(deps): update dependency balena-sdk to v23.2.25 (#237)
+- chore(ci): update github/codeql-action action to v4.39.4 (#236)
+- chore(ci): update trufflesecurity/trufflehog action to v3.100.0 (#235)
+- chore(deps): update alpine packages to v3.5.9-r1 (#233)
+- chore(ci): update ossf/scorecard-action action to v2.6.0 (#234)
+- chore(deps): lock file maintenance (#232)
+- chore(deps): update dependency balena-sdk to v23.2.24 (#231)
+- chore(deps): update dependency balena-sdk to v23.2.21 (#230)
+- chore(ci): update trufflesecurity/trufflehog action to v3.99.9 (#229)
+- chore(security): ignore the unreachable minimatch bug in lint tooling (#228)
+
 ## 0.5.18 (2026-11-12)
 
 * chore(release): sync the version files to v0.5.17 (#227)
