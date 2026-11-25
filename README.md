@@ -127,8 +127,8 @@ also scanned by CodeQL, Trivy, and OSSF Scorecard.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Releases are automated from
-`Change-type:` commit trailers.
+See [CONTRIBUTING.md](CONTRIBUTING.md). [knope](https://knope.tech) automates
+the releases: merge the open `chore: prepare release` pull request to publish one.
 
 ## Acknowledgements
 

@@ -29,3 +29,8 @@ npm test           # lint + build + build:test + node --test (build-test/)
 
 Every release publishes two multi-arch images — the balena block to balenaHub and a
 GHCR mirror. Default and PR target branch is **`master`**.
+
+Releases run through **knope** (`knope.toml`, `knope-prepare.yml`, `knope-release.yml`):
+every push to `master` refreshes a `chore: prepare release X.Y.Z` PR, and **merging it
+publishes the release**. Commits with no `.changeset/` fragment still ship, listed under
+"Other changes" (`scripts/release-fragment.sh`). Never tag from the GitHub release page.
