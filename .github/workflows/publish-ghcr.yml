@@ -11,9 +11,10 @@ jobs:
   publish:
     runs-on: ubuntu-26.04
     permissions:
-      contents: write # softprops/action-gh-release creates the GitHub release
+      contents: write # softprops/action-gh-release attaches the SBOM to the release
       packages: write # push image to GHCR
       id-token: write # cosign keyless signing (OIDC)
+      actions: write # dispatch trivy.yml once :latest is the new image
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
@@ -61,10 +62,19 @@ jobs:
           format: spdx-json
           output-file: autohupr.spdx.json
           artifact-name: autohupr-sbom.spdx.json
-      - name: Publish release with SBOM
+      # knope-release.yml already created this release with the CHANGELOG notes.
+      # This step only attaches the SBOM. It keeps the existing body as it is.
+      - name: Attach the SBOM to the release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
           files: autohupr.spdx.json
           fail_on_unmatched_files: true
+      # The published-image Trivy alerts close only when trivy.yml's `published`
+      # job scans the new :latest. That job runs on the Monday cron or on
+      # workflow_dispatch, so start it now. A dispatch by GITHUB_TOKEN does
+      # start the workflow.
+      - name: Rescan the published image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run trivy.yml --repo "$GITHUB_REPOSITORY" --ref master

@@ -1,0 +1,82 @@
+name: Prepare Release
+
+# knope's "release PR" half. On each push to master, if there is something to
+# release, knope bumps package.json, package-lock.json, balena.yml, and
+# CHANGELOG.md, force-pushes the `release` branch, and opens or refreshes a
+# `chore: prepare release X.Y.Z` PR. Merging that PR is the approval gate. The
+# merge starts knope-release.yml.
+#
+# "Something to release" is a hand-written `.changeset/*.md` fragment, or a
+# commit since the last tag. scripts/release-fragment.sh turns those commits
+# into one generated fragment. So a Renovate bump alone keeps a release PR open
+# with the fix in it. Run this workflow by hand to refresh the PR on demand.
+#
+# It pushes and opens the PR with RELEASE_TOKEN (a PAT), the same secret that the
+# old release.yml used. A PR opened with GITHUB_TOKEN would not start CI, and
+# its required checks would never report.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: knope-prepare
+  cancel-in-progress: false
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      # Full history and tags, so the script and knope can find the last tag.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+          persist-credentials: true # knope pushes the `release` branch
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+
+      - name: Find what to release
+        id: pending
+        run: |
+          set -euo pipefail
+          status=0
+          scripts/release-fragment.sh || status=$?
+          if [ "$status" -eq 3 ]; then
+            # A release PR merged, and knope-release.yml did not tag it yet. That
+            # is normal for the push of the merge itself. If it lasts, the tag
+            # step failed: run "Knope Release" by hand.
+            echo "::notice::The current version has no tag yet; leaving the release PR alone."
+            echo "has=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [ "$status" -eq 0 ] || exit "$status"
+          count=$(find .changeset -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
+          echo "pending fragments (generated included): $count"
+          echo "has=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure git identity
+        if: steps.pending.outputs.has == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install knope
+        if: steps.pending.outputs.has == 'true'
+        uses: knope-dev/action@19617851f9f13ab2f27a05989c55efb18aca3675 # v2.1.2
+        with:
+          # renovate: datasource=github-releases depName=knope-dev/knope extractVersion=^knope/v(?<version>.+)$
+          version: 0.24.0
+
+      - name: Open or refresh the release PR
+        if: steps.pending.outputs.has == 'true'
+        run: knope prepare-release --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

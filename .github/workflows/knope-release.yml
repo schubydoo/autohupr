@@ -1,0 +1,58 @@
+name: Knope Release
+
+# knope's "publish" half. When the `chore: prepare release X.Y.Z` PR (opened by
+# knope-prepare.yml from the `release` branch) merges, knope creates the
+# `vX.Y.Z` tag and the GitHub Release from the CHANGELOG notes.
+#
+# It does this with RELEASE_TOKEN (a PAT). A tag that GITHUB_TOKEN creates does
+# not start other workflows. This tag must start publish-ghcr.yml and
+# balena-publish-block.yml, which build, sign, and publish the images. So this
+# workflow does not build anything itself.
+#
+# It triggers on the merge of the release PR (head branch `release`), not on a
+# commit message, because a squash subject is editable.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+  workflow_dispatch: # fallback: run on master if the merge run failed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: knope-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      ${{ (github.event_name == 'pull_request'
+           && github.event.pull_request.merged == true
+           && github.event.pull_request.head.repo.full_name == github.repository
+           && github.head_ref == 'release')
+          || (github.event_name == 'workflow_dispatch'
+              && github.ref == 'refs/heads/master') }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      # The squash commit that landed on master, not the PR head. Full history
+      # and tags, for knope's version comparison.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install knope
+        uses: knope-dev/action@19617851f9f13ab2f27a05989c55efb18aca3675 # v2.1.2
+        with:
+          # renovate: datasource=github-releases depName=knope-dev/knope extractVersion=^knope/v(?<version>.+)$
+          version: 0.24.0
+
+      # A no-op when the version already has a release.
+      - name: Create the tag and the GitHub Release
+        run: knope release --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

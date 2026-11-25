@@ -1,0 +1,98 @@
+# Release automation for autohupr: knope with the changeset model, ported from
+# podspine. It replaces the old `Change-type:` trailer release.yml.
+#
+# Two inputs drive a release:
+#
+# 1. Hand-written `.changeset/*.md` fragments. Write one when a change needs its
+#    own changelog line or a minor or major bump. `knope document-change` writes
+#    one. See CONTRIBUTING.md.
+# 2. scripts/release-fragment.sh. knope-prepare.yml runs it on every push to
+#    master. It lists every commit since the last tag that has no fragment, as
+#    one "other" (patch) entry. So a Renovate bump opens a release PR by itself.
+#
+# The release PR half is .github/workflows/knope-prepare.yml, and the publish
+# half is knope-release.yml. knope only makes the version PR, the CHANGELOG, the
+# tag, and the GitHub Release. The tag push then starts publish-ghcr.yml and
+# balena-publish-block.yml, which build and publish the images, as before.
+
+[package]
+versioned_files = [
+  "package.json",
+  "package-lock.json",
+  { path = "balena.yml", regex = '(?m)^version: (?<version>\d+\.\d+\.\d+)$' },
+]
+changelog = "CHANGELOG.md"
+
+# The `default:` value of a fragment selects the changelog section and the bump.
+# A custom type always bumps the patch version.
+extra_changelog_sections = [
+  { name = "Security", types = ["security"] },
+  { name = "Other changes", types = ["other"] },
+]
+
+[changes]
+ignore_conventional_commits = true # the fragments are the only source
+
+[github]
+owner = "schubydoo"
+repo = "autohupr"
+
+# knope finds the PR that added each changeset file and appends its number. It
+# uses the first template whose variables all resolve, so an entry with no
+# traceable PR (the generated fragment, or a local dry run) has no link.
+[release_notes]
+change_templates = [
+  "### $summary ([#$pr_number](https://github.com/schubydoo/autohupr/pull/$pr_number))\n\n$details",
+  "### $summary\n\n$details",
+  "- $summary ([#$pr_number](https://github.com/schubydoo/autohupr/pull/$pr_number))",
+  "- $summary",
+]
+
+# --- prepare-release: open or refresh the `release` PR (run on push to master) ---
+[[workflows]]
+name = "prepare-release"
+
+[[workflows.steps]]
+type = "Command"
+command = "git switch -C release"
+
+[[workflows.steps]]
+type = "PrepareRelease"
+
+# knope rewrites package.json and package-lock.json without the final newline.
+# npm writes them back in its own format. The version is already correct.
+[[workflows.steps]]
+type = "Command"
+command = "npm version $version --no-git-tag-version --allow-same-version"
+
+[[workflows.steps]]
+type = "Command"
+command = 'git commit -am "chore: prepare release $version"'
+
+[[workflows.steps]]
+type = "Command"
+command = "git push --force --set-upstream origin release"
+
+[[workflows.steps]]
+type = "CreatePullRequest"
+base = "master"
+
+[workflows.steps.title]
+template = "chore: prepare release $version"
+
+[workflows.steps.body]
+template = "Merging this PR tags v$version. The tag push publishes the GHCR image and the balenaHub block.\n\nknope generated this PR from the `.changeset/*.md` fragments and the commits since the last tag. Do not edit it by hand. Each push to master refreshes it.\n\n---\n\n$changelog"
+
+# --- release: create the tag and the GitHub Release on merge of the release PR ---
+[[workflows]]
+name = "release"
+
+[[workflows.steps]]
+type = "Release"
+
+# --- document-change: write a new .changeset fragment (local convenience) ---
+[[workflows]]
+name = "document-change"
+
+[[workflows.steps]]
+type = "CreateChangeFile"

@@ -26,13 +26,14 @@ function die(msg, err) {
 	process.exit(1);
 }
 
-// The newest release's section only: from the first "# vX" header up to (but
-// excluding) the second "# vX" header. Excludes the "# Change Log" title.
+// The newest release's section only: from the first "## X.Y.Z" header (the
+// heading knope writes) up to (but excluding) the next one. Excludes the
+// "# Change Log" title.
 function newestReleaseSection(text) {
 	const lines = text.split('\n');
 	let start = -1;
 	for (let i = 0; i < lines.length; i++) {
-		if (/^# v\d/.test(lines[i])) {
+		if (/^## \d/.test(lines[i])) {
 			start = i;
 			break;
 		}
@@ -42,7 +43,7 @@ function newestReleaseSection(text) {
 	}
 	const out = [lines[start]];
 	for (let i = start + 1; i < lines.length; i++) {
-		if (/^# v\d/.test(lines[i])) {
+		if (/^## \d/.test(lines[i])) {
 			break;
 		}
 		out.push(lines[i]);

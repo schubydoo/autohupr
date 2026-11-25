@@ -9,5 +9,5 @@
 ## Checklist
 
 - [ ] One logical change per PR
-- [ ] `Change-type:` trailer set on the commit(s) (omit only for intentional no-release commits)
+- [ ] A `.changeset/*.md` fragment, if this change needs its own changelog line or a minor or major bump
 - [ ] `npm test` passes locally
