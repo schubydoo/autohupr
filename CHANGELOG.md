@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.5.20 (2026-11-28)
+
+### Other changes
+
+#### Commits since v0.5.19
+
+- chore(deps): update dependency @types/node to v26.6.10 (#247)
+- chore(deps): update dependency balena-sdk to v23.2.30 (#238)
+- chore(deps): update dependency @types/node to v26.6.9 (#245)
+
 ## 0.5.19 (2026-11-25)
 
 ### Other changes
